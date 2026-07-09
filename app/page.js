@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import CalendarView from "./components/CalendarView";
 
 function formatDate(value) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -23,6 +24,7 @@ export default function Home() {
   const [state, setState] = useState("loading");
   const [loginError, setLoginError] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
+  const [activeView, setActiveView] = useState("calls");
   const [search, setSearch] = useState("");
   const [pagination, setPagination] = useState({
     page: 1,
@@ -127,9 +129,18 @@ export default function Home() {
           <span>Voice desk</span>
         </div>
         <nav>
-          <button className="shop-nav-item active">
+          <button
+            className={`shop-nav-item ${activeView === "calls" ? "active" : ""}`}
+            onClick={() => setActiveView("calls")}
+          >
             <span>◉</span> Calls
             <small>{pagination.total}</small>
+          </button>
+          <button
+            className={`shop-nav-item ${activeView === "calendar" ? "active" : ""}`}
+            onClick={() => setActiveView("calendar")}
+          >
+            <span>▦</span> Calendar
           </button>
         </nav>
         <div className="sidebar-status">
@@ -168,6 +179,8 @@ export default function Home() {
         </div>
 
         <main className="shop-main">
+      {activeView === "calls" ? (
+        <>
       <header className="shop-page-header">
         <div>
           <span className="admin-kicker">Call history</span>
@@ -274,6 +287,10 @@ export default function Home() {
           </nav>
         )}
       </section>
+        </>
+      ) : (
+        <CalendarView agents={agents} />
+      )}
         </main>
       </div>
 
