@@ -1,6 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import countries from "i18n-iso-countries";
+import englishCountries from "i18n-iso-countries/langs/en.json";
+
+countries.registerLocale(englishCountries);
+
+const countryNames = countries.getNames("en", { select: "official" });
+const countryOptions = Object.entries(countryNames).sort((first, second) =>
+  first[1].localeCompare(second[1]),
+);
+
+function countryFlag(code) {
+  return code
+    .toUpperCase()
+    .replace(/./g, (character) =>
+      String.fromCodePoint(127397 + character.charCodeAt()),
+    );
+}
 
 const dayLabels = {
   monday: "Monday",
@@ -39,6 +56,8 @@ export default function BusinessSettingsView() {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        countryCode: values.countryCode,
+        country: countryNames[values.countryCode],
         address: values.address,
         publicPhone: values.publicPhone,
         website: values.website,
@@ -84,6 +103,23 @@ export default function BusinessSettingsView() {
             </div>
           </div>
           <div className="settings-fields">
+            <label>Country
+              <select
+                name="countryCode"
+                defaultValue={
+                  settings.countryCode ||
+                  countries.getAlpha2Code(settings.country || "", "en") ||
+                  "CA"
+                }
+                required
+              >
+                {countryOptions.map(([code, name]) => (
+                  <option value={code} key={code}>
+                    {countryFlag(code)} {name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <label>Address<input name="address" defaultValue={settings.address} /></label>
             <label>Public phone<input name="publicPhone" defaultValue={settings.publicPhone} /></label>
             <label>Website<input name="website" type="url" defaultValue={settings.website} /></label>

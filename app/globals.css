@@ -160,7 +160,7 @@ header p { margin: 24px 0 0 6px; color: var(--muted); font-size: 17px; }
 .settings-section-title p { margin-top: 5px; color: var(--muted); font-size: 12px; }
 .settings-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding-top: 20px; }
 .settings-fields label { display: grid; gap: 7px; color: var(--muted); font-size: 12px; }
-.settings-fields input, .settings-fields textarea { padding: 12px; border: 1px solid var(--line); background: white; font: inherit; }
+.settings-fields input, .settings-fields textarea, .settings-fields select { padding: 12px; border: 1px solid var(--line); background: white; font: inherit; }
 .settings-fields .wide-field { grid-column: 1 / -1; }
 .weekly-hours { display: grid; padding-top: 12px; }
 .hours-row { display: grid; grid-template-columns: minmax(150px, 1fr) 120px 26px 120px; align-items: center; gap: 10px; min-height: 54px; border-bottom: 1px solid var(--line); }
