@@ -22,17 +22,28 @@ export default function Home() {
   const [selectedCall, setSelectedCall] = useState(null);
   const [state, setState] = useState("loading");
   const [loginError, setLoginError] = useState("");
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [pagination, setPagination] = useState({
+    page: 1,
+    total: 0,
+    totalPages: 1,
+    hasPrevious: false,
+    hasNext: false,
+  });
 
-  async function loadCalls() {
+  async function loadCalls(page = 1, query = search) {
     setState("loading");
 
     try {
       const [callsResponse, agentsResponse] = await Promise.all([
-        fetch("/api/calls"),
+        fetch(`/api/calls?page=${page}&q=${encodeURIComponent(query)}`),
         fetch("/api/agents"),
       ]);
       if (!callsResponse.ok || !agentsResponse.ok) throw new Error();
-      setCalls(await callsResponse.json());
+      const callData = await callsResponse.json();
+      setCalls(callData.calls);
+      setPagination(callData.pagination);
       setAgents(await agentsResponse.json());
       setState("ready");
     } catch {
@@ -65,6 +76,11 @@ export default function Home() {
     window.location.href = "/";
   }
 
+  function searchCalls(event) {
+    event.preventDefault();
+    loadCalls(1, search);
+  }
+
   useEffect(() => {
     loadCalls();
   }, []);
@@ -85,90 +101,126 @@ export default function Home() {
     };
   }, [selectedCall]);
 
-  return (
-    <main>
-      <header>
-        <div className="eyebrow">
-          <span className="live-dot" />
-          Voice agent archive
-        </div>
-        <div className="title-row">
-          <div>
-            <h1>Call desk</h1>
-            <p>Listen back. Read what was said.</p>
-          </div>
-          <div className="header-actions">
-            {state === "ready" && (
-              <button className="logout-button" onClick={logout}>Logout</button>
-            )}
-            <button
-              className="refresh"
-              onClick={loadCalls}
-              disabled={state === "loading"}
-            >
-              {state === "loading" ? "Loading…" : "Refresh"}
-            </button>
-          </div>
-        </div>
-      </header>
+  if (state === "error") {
+    return (
+      <main className="shop-auth">
+        <form className="shop-login" onSubmit={login}>
+          <span className="eyebrow"><span className="live-dot" />Voice agent portal</span>
+          <h1>Welcome back</h1>
+          <p>Sign in to review your calls and recordings.</p>
+          <input name="email" type="email" placeholder="Email" required />
+          <input name="password" type="password" placeholder="Password" required />
+          <button>Sign in</button>
+          {loginError && (
+            <p className="login-error" role="alert">{loginError}</p>
+          )}
+        </form>
+      </main>
+    );
+  }
 
-      {state === "ready" && (
-        <section className="assigned-agents">
-          <div className="panel-heading">
-            <span>Assigned phone numbers</span>
-            <span>{agents.length} {agents.length === 1 ? "agent" : "agents"}</span>
-          </div>
-          <div className="assigned-agent-grid">
-            {agents.map((agent) => (
-              <article className="assigned-agent" key={agent._id}>
+  return (
+    <div className="shop-shell">
+      <aside className="shop-sidebar">
+        <div className="shop-brand">
+          <span className="brand-mark">V</span>
+          <span>Voice desk</span>
+        </div>
+        <nav>
+          <button className="shop-nav-item active">
+            <span>◉</span> Calls
+            <small>{pagination.total}</small>
+          </button>
+        </nav>
+        <div className="sidebar-status">
+          <span className="live-dot" />
+          System online
+        </div>
+      </aside>
+
+      <div className="shop-workspace">
+        <div className="shop-topbar">
+          <div className="topbar-numbers">
+            <span>Assigned</span>
+            {agents.length ? agents.map((agent) => (
+              <a href={`tel:${agent.assignedPhoneNumber}`} key={agent._id}>
                 <span className={`agent-state ${agent.active ? "on" : "off"}`} />
-                <div>
-                  <strong>{agent.name}</strong>
-                  <a href={`tel:${agent.assignedPhoneNumber}`}>
-                    {agent.assignedPhoneNumber}
-                  </a>
-                </div>
-                <small>{agent.active ? "Active" : "Inactive"}</small>
-              </article>
-            ))}
-            {!agents.length && (
-              <div className="no-assigned-agent">
-                No phone number is assigned to this shop.
+                {agent.assignedPhoneNumber}
+              </a>
+            )) : <small>No number assigned</small>}
+          </div>
+          <div className="profile-menu">
+            <button
+              className="profile-trigger"
+              onClick={() => setProfileOpen(!profileOpen)}
+              aria-expanded={profileOpen}
+              aria-label="Open account menu"
+            >
+              <span className="person-glyph" />
+            </button>
+            {profileOpen && (
+              <div className="profile-dropdown">
+                <span>Shop account</span>
+                <button onClick={logout}>Logout</button>
               </div>
             )}
           </div>
-        </section>
-      )}
+        </div>
+
+        <main className="shop-main">
+      <header className="shop-page-header">
+        <div>
+          <span className="admin-kicker">Call history</span>
+          <h1>Calls</h1>
+        </div>
+        <button
+          className="refresh"
+          onClick={() => loadCalls(pagination.page, search)}
+          disabled={state === "loading"}
+        >
+          {state === "loading" ? "Loading…" : "Refresh"}
+        </button>
+      </header>
 
       <section className="call-panel">
         <div className="panel-heading">
           <span>Recent calls</span>
-          <span>{calls.length} total</span>
+          <span>{pagination.total} total</span>
         </div>
 
-        {state === "error" && (
-          <div className="empty">
-            <strong>Shop sign in</strong>
-            <form className="shop-login" onSubmit={login}>
-              <input name="email" type="email" placeholder="Email" required />
-              <input
-                name="password"
-                type="password"
-                placeholder="Password"
-                required
-              />
-              <button>Sign in</button>
-              {loginError && (
-                <p className="login-error" role="alert">{loginError}</p>
-              )}
-            </form>
-          </div>
+        {state !== "error" && (
+          <form className="call-search" onSubmit={searchCalls}>
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search caller phone number"
+              aria-label="Search calls by phone number"
+            />
+            <button>Search</button>
+            {search && (
+              <button
+                type="button"
+                className="search-clear"
+                onClick={() => {
+                  setSearch("");
+                  loadCalls(1, "");
+                }}
+              >
+                Clear
+              </button>
+            )}
+          </form>
         )}
 
         {state === "ready" && calls.length === 0 && (
           <div className="empty">
-            <strong>No calls yet</strong>
-            <span>Completed voice-agent calls will appear here.</span>
+            <strong>{search ? "No matching calls" : "No calls yet"}</strong>
+            <span>
+              {search
+                ? "Try another caller phone number."
+                : "Completed voice-agent calls will appear here."}
+            </span>
           </div>
         )}
 
@@ -201,7 +253,29 @@ export default function Home() {
             </button>
           </article>
         ))}
+
+        {state === "ready" && pagination.totalPages > 1 && (
+          <nav className="pagination" aria-label="Call history pages">
+            <button
+              disabled={!pagination.hasPrevious}
+              onClick={() => loadCalls(pagination.page - 1, search)}
+            >
+              ← Previous
+            </button>
+            <span>
+              Page {pagination.page} of {pagination.totalPages}
+            </span>
+            <button
+              disabled={!pagination.hasNext}
+              onClick={() => loadCalls(pagination.page + 1, search)}
+            >
+              Next →
+            </button>
+          </nav>
+        )}
       </section>
+        </main>
+      </div>
 
       {selectedCall && (
         <div
@@ -276,6 +350,6 @@ export default function Home() {
           </section>
         </div>
       )}
-    </main>
+    </div>
   );
 }
