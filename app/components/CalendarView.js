@@ -8,6 +8,16 @@ function startOfCalendar(date) {
   return start;
 }
 
+function startOfDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function startOfWeek(date) {
+  const start = startOfDay(date);
+  start.setDate(start.getDate() - start.getDay());
+  return start;
+}
+
 function addDays(date, days) {
   const next = new Date(date);
   next.setDate(next.getDate() + days);
@@ -31,8 +41,15 @@ function dateTimeInputValue(value) {
   return local.toISOString().slice(0, 16);
 }
 
+function appointmentStaffId(appointment) {
+  if (!appointment.staffId) return "";
+  return appointment.staffId._id || appointment.staffId;
+}
+
 export default function CalendarView({ agents }) {
   const [month, setMonth] = useState(() => new Date());
+  const [bookingView, setBookingView] = useState("month");
+  const [selectedStaffId, setSelectedStaffId] = useState("");
   const [appointments, setAppointments] = useState([]);
   const [services, setServices] = useState([]);
   const [staff, setStaff] = useState([]);
@@ -42,15 +59,64 @@ export default function CalendarView({ agents }) {
   const [formError, setFormError] = useState("");
   const [formServiceId, setFormServiceId] = useState("");
 
-  const calendarStart = useMemo(() => startOfCalendar(month), [month]);
+  const calendarStart = useMemo(() => {
+    if (bookingView === "today") return startOfDay(month);
+    if (bookingView === "week") return startOfWeek(month);
+    return startOfCalendar(month);
+  }, [bookingView, month]);
+  const visibleDayCount = bookingView === "month" ? 42 : bookingView === "week" ? 7 : 1;
   const days = useMemo(
-    () => Array.from({ length: 42 }, (_, index) => addDays(calendarStart, index)),
-    [calendarStart],
+    () => Array.from({ length: visibleDayCount }, (_, index) => addDays(calendarStart, index)),
+    [calendarStart, visibleDayCount],
   );
+  const visibleAppointments = useMemo(() => {
+    if (!selectedStaffId) return appointments;
+    if (selectedStaffId === "unassigned") {
+      return appointments.filter((appointment) => !appointmentStaffId(appointment));
+    }
+    return appointments.filter(
+      (appointment) => appointmentStaffId(appointment) === selectedStaffId,
+    );
+  }, [appointments, selectedStaffId]);
+  const periodTitle = useMemo(() => {
+    if (bookingView === "today") {
+      return new Intl.DateTimeFormat("en-CA", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }).format(calendarStart);
+    }
+    if (bookingView === "week") {
+      const end = addDays(calendarStart, 6);
+      return `${new Intl.DateTimeFormat("en-CA", {
+        month: "short",
+        day: "numeric",
+      }).format(calendarStart)} – ${new Intl.DateTimeFormat("en-CA", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }).format(end)}`;
+    }
+    return new Intl.DateTimeFormat("en-CA", {
+      month: "long",
+      year: "numeric",
+    }).format(month);
+  }, [bookingView, calendarStart, month]);
+
+  function movePeriod(direction) {
+    if (bookingView === "today") {
+      setMonth(addDays(month, direction));
+    } else if (bookingView === "week") {
+      setMonth(addDays(month, direction * 7));
+    } else {
+      setMonth(new Date(month.getFullYear(), month.getMonth() + direction, 1));
+    }
+  }
 
   async function loadAppointments() {
     setLoading(true);
-    const end = addDays(calendarStart, 42);
+    const end = addDays(calendarStart, visibleDayCount);
     const response = await fetch(
       `/api/appointments?start=${encodeURIComponent(calendarStart.toISOString())}&end=${encodeURIComponent(end.toISOString())}`,
     );
@@ -60,7 +126,7 @@ export default function CalendarView({ agents }) {
 
   useEffect(() => {
     loadAppointments();
-  }, [calendarStart]);
+  }, [calendarStart, visibleDayCount]);
 
   useEffect(() => {
     Promise.all([
@@ -126,21 +192,40 @@ export default function CalendarView({ agents }) {
           <h1>Calendar</h1>
         </div>
         <div className="calendar-actions">
+          <label className="calendar-filter">
+            <span>View</span>
+            <select
+              value={bookingView}
+              onChange={(event) => setBookingView(event.target.value)}
+            >
+              <option value="today">Today</option>
+              <option value="week">This week</option>
+              <option value="month">Month</option>
+            </select>
+          </label>
+          <label className="calendar-filter">
+            <span>Staff</span>
+            <select
+              value={selectedStaffId}
+              onChange={(event) => setSelectedStaffId(event.target.value)}
+            >
+              <option value="">All staff</option>
+              {staff.map((person) => (
+                <option value={person._id} key={person._id}>{person.name}</option>
+              ))}
+              <option value="unassigned">Unassigned</option>
+            </select>
+          </label>
           <button
-            onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
-            aria-label="Previous month"
+            onClick={() => movePeriod(-1)}
+            aria-label="Previous period"
           >
             ←
           </button>
-          <strong>
-            {new Intl.DateTimeFormat("en-CA", {
-              month: "long",
-              year: "numeric",
-            }).format(month)}
-          </strong>
+          <strong>{periodTitle}</strong>
           <button
-            onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
-            aria-label="Next month"
+            onClick={() => movePeriod(1)}
+            aria-label="Next period"
           >
             →
           </button>
@@ -157,19 +242,22 @@ export default function CalendarView({ agents }) {
         </div>
       </header>
 
-      <div className="calendar-weekdays">
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+      <div className={`calendar-weekdays ${bookingView}`}>
+        {(bookingView === "today"
+          ? [new Intl.DateTimeFormat("en-CA", { weekday: "long" }).format(calendarStart)]
+          : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        ).map((day) => (
           <span key={day}>{day}</span>
         ))}
       </div>
-      <div className={`calendar-grid ${loading ? "loading" : ""}`}>
+      <div className={`calendar-grid ${bookingView} ${loading ? "loading" : ""}`}>
         {days.map((day) => {
-          const dayAppointments = appointments.filter((appointment) =>
+          const dayAppointments = visibleAppointments.filter((appointment) =>
             sameDay(new Date(appointment.startAt), day),
           );
           return (
             <article
-              className={`calendar-day ${day.getMonth() !== month.getMonth() ? "outside" : ""} ${sameDay(day, new Date()) ? "today" : ""}`}
+              className={`calendar-day ${bookingView === "month" && day.getMonth() !== month.getMonth() ? "outside" : ""} ${sameDay(day, new Date()) ? "today" : ""}`}
               key={day.toISOString()}
             >
               <span className="day-number">{day.getDate()}</span>
@@ -197,10 +285,16 @@ export default function CalendarView({ agents }) {
 
       <div className="appointment-list">
         <div className="panel-heading">
-          <span>Appointments this view</span>
-          <span>{appointments.length} total</span>
+          <span>
+            {bookingView === "today"
+              ? "Appointments today"
+              : bookingView === "week"
+                ? "Appointments this week"
+                : "Appointments this month"}
+          </span>
+          <span>{visibleAppointments.length} total</span>
         </div>
-        {appointments.map((appointment) => (
+        {visibleAppointments.map((appointment) => (
           <article key={appointment._id}>
             <div>
               <strong>{appointment.title}</strong>

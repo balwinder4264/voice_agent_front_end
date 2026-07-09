@@ -107,11 +107,18 @@ header p { margin: 24px 0 0 6px; color: var(--muted); font-size: 17px; }
 .calendar-actions button { min-width: 38px; padding: 10px 12px; border: 1px solid var(--line); background: var(--card); cursor: pointer; }
 .calendar-actions strong { min-width: 150px; text-align: center; font-size: 13px; }
 .calendar-actions .calendar-create { margin-left: 8px; border-color: var(--ink); color: var(--card); background: var(--ink); }
+.calendar-filter { display: flex; align-items: center; gap: 7px; padding: 6px 8px; border: 1px solid var(--line); background: rgba(255,254,249,.68); }
+.calendar-filter span { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.calendar-filter select { min-width: 118px; padding: 6px 28px 6px 7px; border: 0; background: transparent; color: var(--ink); font: inherit; font-size: 13px; outline: 0; cursor: pointer; }
+.calendar-filter:focus-within { border-color: var(--ink); box-shadow: 0 0 0 3px rgba(213,255,64,.45); }
 .calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); border: 1px solid var(--line); border-bottom: 0; background: rgba(255,254,249,.5); }
+.calendar-weekdays.today { grid-template-columns: 1fr; }
 .calendar-weekdays span { padding: 10px; color: var(--muted); font: 10px "DM Mono", monospace; text-transform: uppercase; text-align: center; }
 .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); transition: opacity .2s; }
+.calendar-grid.today { grid-template-columns: 1fr; }
 .calendar-grid.loading { opacity: .5; }
 .calendar-day { min-width: 0; min-height: 116px; padding: 9px; background: rgba(255,254,249,.7); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.calendar-grid.today .calendar-day { min-height: 340px; }
 .calendar-day.outside { color: #acb0ad; background: rgba(235,233,225,.5); }
 .calendar-day.today .day-number { display: grid; place-items: center; width: 24px; height: 24px; color: var(--ink); background: var(--acid); border-radius: 50%; }
 .day-number { display: block; font: 11px "DM Mono", monospace; }
