@@ -56,6 +56,7 @@ export default function BusinessSettingsView() {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        shopName: values.shopName,
         countryCode: values.countryCode,
         country: countryNames[values.countryCode],
         address: values.address,
@@ -103,6 +104,7 @@ export default function BusinessSettingsView() {
             </div>
           </div>
           <div className="settings-fields">
+            <label>Shop name<input name="shopName" defaultValue={settings.shopName} required /></label>
             <label>Country
               <select
                 name="countryCode"

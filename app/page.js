@@ -29,6 +29,7 @@ export default function Home() {
   const [loginError, setLoginError] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
   const [activeView, setActiveView] = useState("calendar");
+  const [shopUser, setShopUser] = useState(null);
   const [search, setSearch] = useState("");
   const [pagination, setPagination] = useState({
     page: 1,
@@ -57,6 +58,25 @@ export default function Home() {
     }
   }
 
+  async function loadShopUser() {
+    try {
+      const response = await fetch("/api/settings");
+      if (!response.ok) return;
+      const settings = await response.json();
+      const profile = {
+        name: settings.userName,
+        email: settings.userEmail,
+        shopName: settings.shopName,
+      };
+      if (profile.email) {
+        localStorage.setItem("shop_user", JSON.stringify(profile));
+        setShopUser(profile);
+      }
+    } catch {
+      // Non-blocking: calls/calendar can still load without profile text.
+    }
+  }
+
   async function login(event) {
     event.preventDefault();
     setLoginError("");
@@ -70,6 +90,13 @@ export default function Home() {
       if (user.role === "admin") {
         window.location.href = "/admin";
       } else {
+        const profile = {
+          name: user.name,
+          email: user.email,
+          shopName: user.shopName,
+        };
+        localStorage.setItem("shop_user", JSON.stringify(profile));
+        setShopUser(profile);
         loadCalls();
       }
     } else {
@@ -79,6 +106,7 @@ export default function Home() {
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
+    localStorage.removeItem("shop_user");
     window.location.href = "/";
   }
 
@@ -88,6 +116,15 @@ export default function Home() {
   }
 
   useEffect(() => {
+    const savedUser = localStorage.getItem("shop_user");
+    if (savedUser) {
+      try {
+        setShopUser(JSON.parse(savedUser));
+      } catch {
+        localStorage.removeItem("shop_user");
+      }
+    }
+    loadShopUser();
     loadCalls();
   }, []);
 
@@ -173,7 +210,10 @@ export default function Home() {
         </nav>
         <div className="sidebar-status">
           <span className="live-dot" />
-          System online
+          <span>
+            <strong>System online</strong>
+            {shopUser?.email && <small>{shopUser.email}</small>}
+          </span>
         </div>
       </aside>
 
@@ -199,7 +239,7 @@ export default function Home() {
             </button>
             {profileOpen && (
               <div className="profile-dropdown">
-                <span>Shop account</span>
+                <span>{shopUser?.email || "Shop account"}</span>
                 <button onClick={logout}>Logout</button>
               </div>
             )}
