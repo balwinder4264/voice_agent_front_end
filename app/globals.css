@@ -130,6 +130,35 @@ header p { margin: 24px 0 0 6px; color: var(--muted); font-size: 17px; }
 .appointment-list select { padding: 8px; border: 1px solid var(--line); background: var(--card); }
 .appointment-edit { padding: 8px 10px; border: 1px solid var(--line); background: transparent; cursor: pointer; }
 .services-module { width: 100%; }
+.staff-module { width: 100%; }
+.staff-roster { border-top: 1px solid var(--ink); }
+.staff-roster > article { display: grid; grid-template-columns: 48px minmax(150px, .8fr) minmax(220px, 1.5fr) 80px 54px; align-items: center; gap: 16px; padding: 17px 4px; border-bottom: 1px solid var(--line); opacity: 0; animation: arrive .45s ease forwards; animation-delay: var(--delay); }
+.staff-monogram { display: grid; place-items: center; width: 42px; height: 42px; color: var(--acid); background: var(--ink); border-radius: 14px 4px 14px 4px; font: 11px "DM Mono", monospace; }
+.staff-identity { min-width: 0; display: grid; gap: 4px; }
+.staff-identity strong { font-size: 14px; }
+.staff-identity > span { overflow: hidden; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.staff-services { display: flex; flex-wrap: wrap; gap: 5px; }
+.staff-services span { padding: 5px 7px; color: var(--green); background: #dcebdd; font-size: 9px; }
+.staff-roster article > button { padding: 8px 10px; border: 1px solid var(--line); background: transparent; cursor: pointer; }
+.admin-sheet.staff-sheet { width: min(700px, 100%); }
+.staff-fieldset { min-width: 0; margin: 7px 0; padding: 18px; border: 1px solid var(--line); }
+.staff-fieldset legend { padding: 0 8px; color: var(--ink); font-size: 13px; font-weight: 700; }
+.service-checks { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.service-checks label { display: flex; align-items: center; gap: 8px; padding: 9px; color: var(--ink); background: var(--paper); }
+.service-checks input { accent-color: var(--green); }
+.staff-hours { display: grid; }
+.staff-hours > div { min-height: 48px; display: grid; grid-template-columns: minmax(120px, 1fr) 105px 20px 105px; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); }
+.staff-hours > div:last-child { border-bottom: 0; }
+.staff-hours > div > label { display: flex; align-items: center; gap: 8px; color: var(--ink); text-transform: capitalize; }
+.staff-hours input[type="checkbox"] { accent-color: var(--green); }
+.staff-hours input[type="time"] { min-width: 0; padding: 8px; }
+.staff-hours .disabled { color: var(--muted); }
+.staff-hours small { grid-column: 2 / -1; font: 9px "DM Mono", monospace; text-transform: uppercase; }
+.time-off-list { display: grid; gap: 7px; }
+.time-off-list > div { display: grid; grid-template-columns: 130px 130px 1fr 34px; gap: 6px; }
+.time-off-list input { min-width: 0; padding: 9px; }
+.time-off-list button, .add-time-off { border: 1px solid var(--line); background: transparent; cursor: pointer; }
+.add-time-off { margin-top: 10px; padding: 9px 11px; color: var(--green); }
 .services-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 30px; }
 .services-header h1 { margin: 5px 0 0; font-size: clamp(38px, 5vw, 58px); line-height: .9; letter-spacing: -.06em; }
 .services-header p { margin: 13px 0 0; color: var(--muted); }
@@ -389,6 +418,13 @@ small { color: var(--muted); }
   .appointment-list > article { grid-template-columns: 1fr auto; }
   .appointment-list time { grid-column: 1; }
   .services-header { align-items: flex-start; flex-direction: column; }
+  .staff-roster > article { grid-template-columns: 46px 1fr auto; }
+  .staff-services { grid-column: 2 / -1; }
+  .staff-roster article > button { grid-column: 3; grid-row: 1; }
+  .service-checks { grid-template-columns: 1fr; }
+  .staff-hours > div { grid-template-columns: 1fr 92px 14px 92px; }
+  .time-off-list > div { grid-template-columns: 1fr 1fr 34px; }
+  .time-off-list > div input:nth-child(3) { grid-column: 1 / 3; }
   .service-list-heading { display: none; }
   .service-list > article { grid-template-columns: 1fr auto; gap: 10px; padding: 18px 2px; }
   .service-list article div { grid-column: 1 / -1; }

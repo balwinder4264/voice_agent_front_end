@@ -35,10 +35,12 @@ export default function CalendarView({ agents }) {
   const [month, setMonth] = useState(() => new Date());
   const [appointments, setAppointments] = useState([]);
   const [services, setServices] = useState([]);
+  const [staff, setStaff] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [formError, setFormError] = useState("");
+  const [formServiceId, setFormServiceId] = useState("");
 
   const calendarStart = useMemo(() => startOfCalendar(month), [month]);
   const days = useMemo(
@@ -61,9 +63,13 @@ export default function CalendarView({ agents }) {
   }, [calendarStart]);
 
   useEffect(() => {
-    fetch("/api/services")
-      .then((response) => (response.ok ? response.json() : []))
-      .then((result) => setServices(result.filter((service) => service.active)));
+    Promise.all([
+      fetch("/api/services").then((response) => (response.ok ? response.json() : [])),
+      fetch("/api/staff").then((response) => (response.ok ? response.json() : [])),
+    ]).then(([serviceResult, staffResult]) => {
+      setServices(serviceResult.filter((service) => service.active));
+      setStaff(staffResult.filter((person) => person.active));
+    });
   }, []);
 
   async function saveAppointment(event) {
@@ -142,6 +148,7 @@ export default function CalendarView({ agents }) {
             className="calendar-create"
             onClick={() => {
               setFormError("");
+              setFormServiceId("");
               setShowForm(true);
             }}
           >
@@ -173,11 +180,13 @@ export default function CalendarView({ agents }) {
                     key={appointment._id}
                     onClick={() => {
                       setFormError("");
+                      setFormServiceId(appointment.serviceId?._id || appointment.serviceId || "");
                       setEditingAppointment(appointment);
                     }}
                   >
                     <strong>{timeLabel(appointment.startAt)} · {appointment.title}</strong>
                     <span>{appointment.customerName}</span>
+                    {appointment.staffId?.name && <span>{appointment.staffId.name}</span>}
                   </button>
                 ))}
               </div>
@@ -196,6 +205,7 @@ export default function CalendarView({ agents }) {
             <div>
               <strong>{appointment.title}</strong>
               <span>{appointment.customerName} · {appointment.customerPhone}</span>
+              {appointment.staffId?.name && <span>Staff: {appointment.staffId.name}</span>}
             </div>
             <time>{new Date(appointment.startAt).toLocaleString("en-CA")}</time>
             <select
@@ -213,6 +223,7 @@ export default function CalendarView({ agents }) {
               className="appointment-edit"
               onClick={() => {
                 setFormError("");
+                setFormServiceId(appointment.serviceId?._id || appointment.serviceId || "");
                 setEditingAppointment(appointment);
               }}
             >
@@ -254,6 +265,7 @@ export default function CalendarView({ agents }) {
               <select
                 name="serviceId"
                 required
+                onChange={(event) => setFormServiceId(event.target.value)}
                 defaultValue={
                   typeof editingAppointment?.serviceId === "object"
                     ? editingAppointment.serviceId?._id
@@ -295,6 +307,29 @@ export default function CalendarView({ agents }) {
                 {agents.map((agent) => (
                   <option value={agent._id} key={agent._id}>{agent.name}</option>
                 ))}
+              </select>
+            </label>
+            <label>Staff member
+              <select
+                name="staffId"
+                defaultValue={
+                  typeof editingAppointment?.staffId === "object"
+                    ? editingAppointment.staffId?._id
+                    : editingAppointment?.staffId || ""
+                }
+              >
+                <option value="">Automatically assign qualified staff</option>
+                {staff
+                  .filter(
+                    (person) =>
+                      !formServiceId ||
+                      person.serviceIds.some(
+                        (service) => (service._id || service) === formServiceId,
+                      ),
+                  )
+                  .map((person) => (
+                  <option value={person._id} key={person._id}>{person.name}</option>
+                  ))}
               </select>
             </label>
             <label>Status

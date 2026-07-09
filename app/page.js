@@ -5,6 +5,7 @@ import CalendarView from "./components/CalendarView";
 import ServicesView from "./components/ServicesView";
 import BusinessSettingsView from "./components/BusinessSettingsView";
 import AnalyticsView from "./components/AnalyticsView";
+import StaffView from "./components/StaffView";
 
 function formatDate(value) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -27,7 +28,7 @@ export default function Home() {
   const [state, setState] = useState("loading");
   const [loginError, setLoginError] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
-  const [activeView, setActiveView] = useState("calls");
+  const [activeView, setActiveView] = useState("calendar");
   const [search, setSearch] = useState("");
   const [pagination, setPagination] = useState({
     page: 1,
@@ -133,6 +134,12 @@ export default function Home() {
         </div>
         <nav>
           <button
+            className={`shop-nav-item ${activeView === "calendar" ? "active" : ""}`}
+            onClick={() => setActiveView("calendar")}
+          >
+            <span>▦</span> Calendar
+          </button>
+          <button
             className={`shop-nav-item ${activeView === "calls" ? "active" : ""}`}
             onClick={() => setActiveView("calls")}
           >
@@ -140,16 +147,16 @@ export default function Home() {
             <small>{pagination.total}</small>
           </button>
           <button
-            className={`shop-nav-item ${activeView === "calendar" ? "active" : ""}`}
-            onClick={() => setActiveView("calendar")}
-          >
-            <span>▦</span> Calendar
-          </button>
-          <button
             className={`shop-nav-item ${activeView === "services" ? "active" : ""}`}
             onClick={() => setActiveView("services")}
           >
             <span>≡</span> Services
+          </button>
+          <button
+            className={`shop-nav-item ${activeView === "staff" ? "active" : ""}`}
+            onClick={() => setActiveView("staff")}
+          >
+            <span>◎</span> Staff
           </button>
           <button
             className={`shop-nav-item ${activeView === "analytics" ? "active" : ""}`}
@@ -313,6 +320,8 @@ export default function Home() {
         <CalendarView agents={agents} />
       ) : activeView === "services" ? (
         <ServicesView />
+      ) : activeView === "staff" ? (
+        <StaffView />
       ) : activeView === "analytics" ? (
         <AnalyticsView />
       ) : (
