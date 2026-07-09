@@ -25,11 +25,18 @@ function timeLabel(value) {
   }).format(new Date(value));
 }
 
+function dateTimeInputValue(value) {
+  const date = new Date(value);
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
 export default function CalendarView({ agents }) {
   const [month, setMonth] = useState(() => new Date());
   const [appointments, setAppointments] = useState([]);
   const [services, setServices] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [formError, setFormError] = useState("");
 
@@ -59,7 +66,7 @@ export default function CalendarView({ agents }) {
       .then((result) => setServices(result.filter((service) => service.active)));
   }, []);
 
-  async function createAppointment(event) {
+  async function saveAppointment(event) {
     event.preventDefault();
     setFormError("");
     const data = Object.fromEntries(new FormData(event.currentTarget));
@@ -69,10 +76,12 @@ export default function CalendarView({ agents }) {
     const endAt = new Date(
       startAt.getTime() + Number(service.durationMinutes) * 60000,
     );
-    if (!data.agentId) delete data.agentId;
+    if (!data.agentId) data.agentId = null;
 
-    const response = await fetch("/api/appointments", {
-      method: "POST",
+    const response = await fetch(
+      `/api/appointments${editingAppointment ? `/${editingAppointment._id}` : ""}`,
+      {
+      method: editingAppointment ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...data,
@@ -83,10 +92,14 @@ export default function CalendarView({ agents }) {
     });
     if (response.ok) {
       setShowForm(false);
+      setEditingAppointment(null);
       loadAppointments();
     } else {
       const result = await response.json().catch(() => ({}));
-      setFormError(result.error || "Could not create appointment.");
+      setFormError(
+        result.error ||
+          `Could not ${editingAppointment ? "update" : "create"} appointment.`,
+      );
     }
   }
 
@@ -155,10 +168,17 @@ export default function CalendarView({ agents }) {
               <span className="day-number">{day.getDate()}</span>
               <div className="day-appointments">
                 {dayAppointments.map((appointment) => (
-                  <div className={`calendar-event ${appointment.status}`} key={appointment._id}>
+                  <button
+                    className={`calendar-event ${appointment.status}`}
+                    key={appointment._id}
+                    onClick={() => {
+                      setFormError("");
+                      setEditingAppointment(appointment);
+                    }}
+                  >
                     <strong>{timeLabel(appointment.startAt)} · {appointment.title}</strong>
                     <span>{appointment.customerName}</span>
-                  </div>
+                  </button>
                 ))}
               </div>
             </article>
@@ -189,22 +209,57 @@ export default function CalendarView({ agents }) {
               <option value="cancelled">Cancelled</option>
               <option value="no_show">No-show</option>
             </select>
+            <button
+              className="appointment-edit"
+              onClick={() => {
+                setFormError("");
+                setEditingAppointment(appointment);
+              }}
+            >
+              Edit
+            </button>
           </article>
         ))}
       </div>
 
-      {showForm && (
-        <div className="admin-overlay" onMouseDown={() => setShowForm(false)}>
+      {(showForm || editingAppointment) && (
+        <div
+          className="admin-overlay"
+          onMouseDown={() => {
+            setShowForm(false);
+            setEditingAppointment(null);
+          }}
+        >
           <form
             className="admin-sheet compact"
-            onSubmit={createAppointment}
+            key={editingAppointment?._id || "new"}
+            onSubmit={saveAppointment}
             onMouseDown={(event) => event.stopPropagation()}
           >
-            <button type="button" className="sheet-close" onClick={() => setShowForm(false)}>×</button>
-            <span className="admin-kicker">New booking</span>
-            <h2>Create appointment</h2>
+            <button
+              type="button"
+              className="sheet-close"
+              onClick={() => {
+                setShowForm(false);
+                setEditingAppointment(null);
+              }}
+            >
+              ×
+            </button>
+            <span className="admin-kicker">
+              {editingAppointment ? "Booking details" : "New booking"}
+            </span>
+            <h2>{editingAppointment ? "Edit appointment" : "Create appointment"}</h2>
             <label>Service
-              <select name="serviceId" required defaultValue="">
+              <select
+                name="serviceId"
+                required
+                defaultValue={
+                  typeof editingAppointment?.serviceId === "object"
+                    ? editingAppointment.serviceId?._id
+                    : editingAppointment?.serviceId || ""
+                }
+              >
                 <option value="">Select a service</option>
                 {services.map((service) => (
                   <option value={service._id} key={service._id}>
@@ -213,11 +268,29 @@ export default function CalendarView({ agents }) {
                 ))}
               </select>
             </label>
-            <label>Customer name<input name="customerName" required /></label>
-            <label>Customer phone<input name="customerPhone" required /></label>
-            <label>Date and time<input name="startAt" type="datetime-local" required /></label>
+            <label>Customer name<input name="customerName" defaultValue={editingAppointment?.customerName} required /></label>
+            <label>Customer phone<input name="customerPhone" defaultValue={editingAppointment?.customerPhone} required /></label>
+            <label>Date and time
+              <input
+                name="startAt"
+                type="datetime-local"
+                defaultValue={
+                  editingAppointment
+                    ? dateTimeInputValue(editingAppointment.startAt)
+                    : ""
+                }
+                required
+              />
+            </label>
             <label>Agent
-              <select name="agentId" defaultValue="">
+              <select
+                name="agentId"
+                defaultValue={
+                  typeof editingAppointment?.agentId === "object"
+                    ? editingAppointment.agentId?._id
+                    : editingAppointment?.agentId || ""
+                }
+              >
                 <option value="">No agent</option>
                 {agents.map((agent) => (
                   <option value={agent._id} key={agent._id}>{agent.name}</option>
@@ -225,16 +298,21 @@ export default function CalendarView({ agents }) {
               </select>
             </label>
             <label>Status
-              <select name="status" defaultValue="confirmed">
+              <select name="status" defaultValue={editingAppointment?.status || "confirmed"}>
                 <option value="pending">Pending</option>
                 <option value="confirmed">Confirmed</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="no_show">No-show</option>
               </select>
             </label>
-            <label>Notes<textarea name="notes" rows="4" /></label>
+            <label>Notes<textarea name="notes" rows="4" defaultValue={editingAppointment?.notes} /></label>
             {formError && (
               <p className="login-error" role="alert">{formError}</p>
             )}
-            <button className="admin-primary">Create appointment</button>
+            <button className="admin-primary">
+              {editingAppointment ? "Save changes" : "Create appointment"}
+            </button>
           </form>
         </div>
       )}

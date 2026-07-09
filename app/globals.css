@@ -117,16 +117,18 @@ header p { margin: 24px 0 0 6px; color: var(--muted); font-size: 17px; }
 .day-number { display: block; font: 11px "DM Mono", monospace; }
 .day-appointments { display: grid; gap: 4px; margin-top: 7px; }
 .calendar-event { min-width: 0; padding: 6px 7px; color: var(--green); background: #dcebdd; border-left: 2px solid var(--green); }
+.calendar-event { width: 100%; border-top: 0; border-right: 0; border-bottom: 0; text-align: left; cursor: pointer; }
 .calendar-event.pending { color: #765d17; background: #f3e8bd; border-color: #b28a19; }
 .calendar-event.cancelled, .calendar-event.no_show { color: #8f3d28; background: #f4ded6; border-color: #b74e32; opacity: .7; }
 .calendar-event.completed { color: var(--muted); background: #e4e5e1; border-color: #8c928d; }
 .calendar-event strong, .calendar-event span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9px; }
 .calendar-event span { margin-top: 2px; color: inherit; opacity: .8; }
 .appointment-list { margin-top: 28px; border-top: 1px solid var(--ink); }
-.appointment-list > article { display: grid; grid-template-columns: 1fr 210px 130px; align-items: center; gap: 20px; padding: 16px 2px; border-top: 1px solid var(--line); }
+.appointment-list > article { display: grid; grid-template-columns: 1fr 210px 130px 58px; align-items: center; gap: 16px; padding: 16px 2px; border-top: 1px solid var(--line); }
 .appointment-list article div { display: flex; flex-direction: column; gap: 4px; }
 .appointment-list article span, .appointment-list time { color: var(--muted); font-size: 12px; }
 .appointment-list select { padding: 8px; border: 1px solid var(--line); background: var(--card); }
+.appointment-edit { padding: 8px 10px; border: 1px solid var(--line); background: transparent; cursor: pointer; }
 .services-module { width: 100%; }
 .services-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 30px; }
 .services-header h1 { margin: 5px 0 0; font-size: clamp(38px, 5vw, 58px); line-height: .9; letter-spacing: -.06em; }
