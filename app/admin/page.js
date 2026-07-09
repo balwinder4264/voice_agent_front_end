@@ -14,14 +14,25 @@ export default function AdminPage() {
   const [agentForm, setAgentForm] = useState(null);
   const [showShopForm, setShowShopForm] = useState(false);
   const [loginError, setLoginError] = useState("");
+  const [search, setSearch] = useState("");
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    total: 0,
+    totalPages: 1,
+    hasPrevious: false,
+    hasNext: false,
+  });
 
-  async function load() {
+  async function load(page = 1, query = search) {
     const [shopResponse, agentResponse] = await Promise.all([
-      fetch("/api/admin/shops"),
+      fetch(`/api/admin/shops?page=${page}&q=${encodeURIComponent(query)}`),
       fetch("/api/admin/agents"),
     ]);
     if (!shopResponse.ok) return setAuthenticated(false);
-    setShops(await shopResponse.json());
+    const shopData = await shopResponse.json();
+    setShops(shopData.shops);
+    setPagination(shopData.pagination);
     setAgents(await agentResponse.json());
     setAuthenticated(true);
   }
@@ -58,7 +69,8 @@ export default function AdminPage() {
     if (response.ok) {
       event.currentTarget.reset();
       setShowShopForm(false);
-      load();
+      setSearch("");
+      load(1, "");
     }
   }
 
@@ -77,7 +89,7 @@ export default function AdminPage() {
     );
     if (response.ok) {
       setAgentForm(null);
-      load();
+      load(pagination.page, search);
     }
   }
 
@@ -104,22 +116,89 @@ export default function AdminPage() {
   );
 
   return (
+    <div className="admin-shell">
+      <aside className="admin-sidebar">
+        <div className="shop-brand">
+          <span className="brand-mark">V</span>
+          <span>Voice admin</span>
+        </div>
+        <nav>
+          <button
+            className="admin-nav-item active"
+            onClick={() => setSelectedShopId(null)}
+          >
+            <span>◆</span> Shops
+            <small>{pagination.total}</small>
+          </button>
+        </nav>
+        <div className="sidebar-status">
+          <span className="live-dot" />
+          Admin console
+        </div>
+      </aside>
+
+      <div className="admin-workspace">
+        <div className="admin-topbar">
+          <span>Administration</span>
+          <div className="profile-menu">
+            <button
+              className="profile-trigger"
+              onClick={() => setProfileOpen(!profileOpen)}
+              aria-expanded={profileOpen}
+              aria-label="Open account menu"
+            >
+              <span className="person-glyph" />
+            </button>
+            {profileOpen && (
+              <div className="profile-dropdown">
+                <span>Administrator</span>
+                <button onClick={logout}>Logout</button>
+              </div>
+            )}
+          </div>
+        </div>
+
     <main className="admin">
       <header className="admin-header">
         <div>
-          <span className="admin-kicker">Voice network / Admin</span>
+          <span className="admin-kicker">Business directory</span>
           <h1>Shops</h1>
-          <p>Select a shop to manage its phone agents.</p>
+          <p>{pagination.total} shops · Select one to manage its agents.</p>
         </div>
-        <div className="header-actions">
-          <button className="logout-button" onClick={logout}>Logout</button>
-          <button className="admin-primary" onClick={() => setShowShopForm(true)}>
-            + Create shop
-          </button>
-        </div>
+        <button className="admin-primary" onClick={() => setShowShopForm(true)}>
+          + Create shop
+        </button>
       </header>
 
       {!selectedShop ? (
+        <>
+        <form
+          className="admin-search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            load(1, search);
+          }}
+        >
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search shops by name"
+          />
+          <button>Search</button>
+          {search && (
+            <button
+              type="button"
+              className="search-clear"
+              onClick={() => {
+                setSearch("");
+                load(1, "");
+              }}
+            >
+              Clear
+            </button>
+          )}
+        </form>
         <section className="shop-grid">
           {shops.map((shop) => {
             const count = agents.filter(
@@ -146,6 +225,24 @@ export default function AdminPage() {
             <div className="admin-empty">Create your first shop to continue.</div>
           )}
         </section>
+        {pagination.totalPages > 1 && (
+          <nav className="pagination" aria-label="Shop pages">
+            <button
+              disabled={!pagination.hasPrevious}
+              onClick={() => load(pagination.page - 1, search)}
+            >
+              ← Previous
+            </button>
+            <span>Page {pagination.page} of {pagination.totalPages}</span>
+            <button
+              disabled={!pagination.hasNext}
+              onClick={() => load(pagination.page + 1, search)}
+            >
+              Next →
+            </button>
+          </nav>
+        )}
+        </>
       ) : (
         <section className="shop-detail">
           <button
@@ -238,5 +335,7 @@ export default function AdminPage() {
         </div>
       )}
     </main>
+      </div>
+    </div>
   );
 }

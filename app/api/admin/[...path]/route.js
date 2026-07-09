@@ -2,8 +2,9 @@ import { cookies } from "next/headers";
 
 async function forward(request, { params }) {
   const { path } = await params;
+  const { search } = new URL(request.url);
   const response = await fetch(
-    `${process.env.BACKEND_URL || "http://localhost:3000"}/api/admin/${path.join("/")}`,
+    `${process.env.BACKEND_URL || "http://localhost:3000"}/api/admin/${path.join("/")}${search}`,
     {
       method: request.method,
       headers: {
