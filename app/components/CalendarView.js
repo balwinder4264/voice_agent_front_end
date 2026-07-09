@@ -28,6 +28,7 @@ function timeLabel(value) {
 export default function CalendarView({ agents }) {
   const [month, setMonth] = useState(() => new Date());
   const [appointments, setAppointments] = useState([]);
+  const [services, setServices] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -51,12 +52,21 @@ export default function CalendarView({ agents }) {
     loadAppointments();
   }, [calendarStart]);
 
+  useEffect(() => {
+    fetch("/api/services")
+      .then((response) => (response.ok ? response.json() : []))
+      .then((result) => setServices(result.filter((service) => service.active)));
+  }, []);
+
   async function createAppointment(event) {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(event.currentTarget));
+    const service = services.find((item) => item._id === data.serviceId);
+    if (!service) return;
     const startAt = new Date(data.startAt);
-    const endAt = new Date(startAt.getTime() + Number(data.durationMinutes) * 60000);
-    delete data.durationMinutes;
+    const endAt = new Date(
+      startAt.getTime() + Number(service.durationMinutes) * 60000,
+    );
     if (!data.agentId) delete data.agentId;
 
     const response = await fetch("/api/appointments", {
@@ -64,6 +74,7 @@ export default function CalendarView({ agents }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...data,
+        title: service.name,
         startAt: startAt.toISOString(),
         endAt: endAt.toISOString(),
       }),
@@ -181,19 +192,19 @@ export default function CalendarView({ agents }) {
             <button type="button" className="sheet-close" onClick={() => setShowForm(false)}>×</button>
             <span className="admin-kicker">New booking</span>
             <h2>Create appointment</h2>
-            <label>Service or reason<input name="title" required /></label>
+            <label>Service
+              <select name="serviceId" required defaultValue="">
+                <option value="">Select a service</option>
+                {services.map((service) => (
+                  <option value={service._id} key={service._id}>
+                    {service.name} · {service.durationMinutes} min
+                  </option>
+                ))}
+              </select>
+            </label>
             <label>Customer name<input name="customerName" required /></label>
             <label>Customer phone<input name="customerPhone" required /></label>
             <label>Date and time<input name="startAt" type="datetime-local" required /></label>
-            <label>Duration
-              <select name="durationMinutes" defaultValue="30">
-                <option value="15">15 minutes</option>
-                <option value="30">30 minutes</option>
-                <option value="45">45 minutes</option>
-                <option value="60">1 hour</option>
-                <option value="90">90 minutes</option>
-              </select>
-            </label>
             <label>Agent
               <select name="agentId" defaultValue="">
                 <option value="">No agent</option>

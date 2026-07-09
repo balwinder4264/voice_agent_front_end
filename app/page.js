@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import CalendarView from "./components/CalendarView";
+import ServicesView from "./components/ServicesView";
 
 function formatDate(value) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -141,6 +142,12 @@ export default function Home() {
             onClick={() => setActiveView("calendar")}
           >
             <span>▦</span> Calendar
+          </button>
+          <button
+            className={`shop-nav-item ${activeView === "services" ? "active" : ""}`}
+            onClick={() => setActiveView("services")}
+          >
+            <span>≡</span> Services
           </button>
         </nav>
         <div className="sidebar-status">
@@ -288,8 +295,10 @@ export default function Home() {
         )}
       </section>
         </>
-      ) : (
+      ) : activeView === "calendar" ? (
         <CalendarView agents={agents} />
+      ) : (
+        <ServicesView />
       )}
         </main>
       </div>

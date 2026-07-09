@@ -127,6 +127,24 @@ header p { margin: 24px 0 0 6px; color: var(--muted); font-size: 17px; }
 .appointment-list article div { display: flex; flex-direction: column; gap: 4px; }
 .appointment-list article span, .appointment-list time { color: var(--muted); font-size: 12px; }
 .appointment-list select { padding: 8px; border: 1px solid var(--line); background: var(--card); }
+.services-module { width: 100%; }
+.services-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 30px; }
+.services-header h1 { margin: 5px 0 0; font-size: clamp(38px, 5vw, 58px); line-height: .9; letter-spacing: -.06em; }
+.services-header p { margin: 13px 0 0; color: var(--muted); }
+.service-list-heading, .service-list > article { display: grid; grid-template-columns: minmax(180px, 1fr) 170px 120px 90px 60px; align-items: center; gap: 18px; }
+.service-list-heading { padding: 11px 4px; color: var(--muted); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); font: 10px "DM Mono", monospace; text-transform: uppercase; }
+.service-list > article { padding: 18px 4px; border-bottom: 1px solid var(--line); }
+.service-list article div { min-width: 0; }
+.service-list article strong { font-size: 15px; }
+.service-list article p { margin: 5px 0 0; overflow: hidden; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.service-list article > span { color: var(--muted); font-size: 12px; }
+.service-list article > button { padding: 8px 10px; border: 1px solid var(--line); background: transparent; cursor: pointer; }
+.service-status { justify-self: start; padding: 6px 8px; border-radius: 100px; font: 9px "DM Mono", monospace !important; text-transform: uppercase; }
+.service-status.active { color: var(--green); background: #dcebdd; }
+.service-status.inactive { color: var(--muted); background: #e4e5e1; }
+.service-form-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 4px; }
+.danger-button { padding: 12px 14px; border: 1px solid #b74e32; color: #9b2f20; background: transparent; cursor: pointer; }
+.danger-button:hover { color: white; background: #9b2f20; }
 
 .call-panel { border-top: 1px solid var(--ink); }
 .call-search { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; padding: 14px 0 18px; border-top: 1px solid var(--line); }
@@ -311,6 +329,12 @@ small { color: var(--muted); }
   .calendar-event strong { font-size: 8px; }
   .appointment-list > article { grid-template-columns: 1fr auto; }
   .appointment-list time { grid-column: 1; }
+  .services-header { align-items: flex-start; flex-direction: column; }
+  .service-list-heading { display: none; }
+  .service-list > article { grid-template-columns: 1fr auto; gap: 10px; padding: 18px 2px; }
+  .service-list article div { grid-column: 1 / -1; }
+  .service-list article > button { grid-column: 2; grid-row: 2; }
+  .service-status { grid-column: 1; }
 }
 
 .admin-login { min-height: 100vh; display: grid; place-items: center; }
