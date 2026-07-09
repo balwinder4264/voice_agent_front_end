@@ -145,6 +145,31 @@ header p { margin: 24px 0 0 6px; color: var(--muted); font-size: 17px; }
 .service-form-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 4px; }
 .danger-button { padding: 12px 14px; border: 1px solid #b74e32; color: #9b2f20; background: transparent; cursor: pointer; }
 .danger-button:hover { color: white; background: #9b2f20; }
+.business-settings-module { width: min(900px, 100%); }
+.settings-header { margin-bottom: 28px; }
+.settings-header h1 { margin: 5px 0 0; font-size: clamp(38px, 5vw, 58px); line-height: .9; letter-spacing: -.06em; }
+.settings-header p { margin: 13px 0 0; color: var(--muted); }
+.business-settings-module form { display: grid; gap: 18px; }
+.settings-card { padding: 26px; background: rgba(255,254,249,.72); border: 1px solid var(--line); }
+.settings-section-title { display: grid; grid-template-columns: 34px 1fr; gap: 14px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.settings-section-title > span { font: 11px "DM Mono", monospace; color: var(--green); }
+.settings-section-title h2, .settings-section-title p { margin: 0; }
+.settings-section-title h2 { font-size: 20px; }
+.settings-section-title p { margin-top: 5px; color: var(--muted); font-size: 12px; }
+.settings-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding-top: 20px; }
+.settings-fields label { display: grid; gap: 7px; color: var(--muted); font-size: 12px; }
+.settings-fields input, .settings-fields textarea { padding: 12px; border: 1px solid var(--line); background: white; font: inherit; }
+.settings-fields .wide-field { grid-column: 1 / -1; }
+.weekly-hours { display: grid; padding-top: 12px; }
+.hours-row { display: grid; grid-template-columns: minmax(150px, 1fr) 120px 26px 120px; align-items: center; gap: 10px; min-height: 54px; border-bottom: 1px solid var(--line); }
+.hours-row:last-child { border-bottom: 0; }
+.hours-row input[type="time"] { padding: 9px; border: 1px solid var(--line); background: white; }
+.day-toggle { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.day-toggle input { accent-color: var(--green); }
+.hours-row.closed { color: var(--muted); }
+.closed-label { grid-column: 2 / -1; font: 10px "DM Mono", monospace; text-transform: uppercase; }
+.settings-save { position: sticky; bottom: 12px; display: flex; justify-content: flex-end; align-items: center; gap: 16px; padding: 14px; background: rgba(243,241,233,.92); border: 1px solid var(--line); backdrop-filter: blur(10px); }
+.settings-save span { margin-right: auto; color: var(--green); font-size: 13px; }
 
 .call-panel { border-top: 1px solid var(--ink); }
 .call-search { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; padding: 14px 0 18px; border-top: 1px solid var(--line); }
@@ -335,6 +360,11 @@ small { color: var(--muted); }
   .service-list article div { grid-column: 1 / -1; }
   .service-list article > button { grid-column: 2; grid-row: 2; }
   .service-status { grid-column: 1; }
+  .settings-card { padding: 20px 15px; }
+  .settings-fields { grid-template-columns: 1fr; }
+  .settings-fields .wide-field { grid-column: auto; }
+  .hours-row { grid-template-columns: 1fr 100px 18px 100px; }
+  .settings-save { align-items: stretch; flex-direction: column; }
 }
 
 .admin-login { min-height: 100vh; display: grid; place-items: center; }

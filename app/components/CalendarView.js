@@ -31,6 +31,7 @@ export default function CalendarView({ agents }) {
   const [services, setServices] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [formError, setFormError] = useState("");
 
   const calendarStart = useMemo(() => startOfCalendar(month), [month]);
   const days = useMemo(
@@ -60,6 +61,7 @@ export default function CalendarView({ agents }) {
 
   async function createAppointment(event) {
     event.preventDefault();
+    setFormError("");
     const data = Object.fromEntries(new FormData(event.currentTarget));
     const service = services.find((item) => item._id === data.serviceId);
     if (!service) return;
@@ -82,6 +84,9 @@ export default function CalendarView({ agents }) {
     if (response.ok) {
       setShowForm(false);
       loadAppointments();
+    } else {
+      const result = await response.json().catch(() => ({}));
+      setFormError(result.error || "Could not create appointment.");
     }
   }
 
@@ -120,7 +125,13 @@ export default function CalendarView({ agents }) {
           >
             →
           </button>
-          <button className="calendar-create" onClick={() => setShowForm(true)}>
+          <button
+            className="calendar-create"
+            onClick={() => {
+              setFormError("");
+              setShowForm(true);
+            }}
+          >
             + Appointment
           </button>
         </div>
@@ -220,6 +231,9 @@ export default function CalendarView({ agents }) {
               </select>
             </label>
             <label>Notes<textarea name="notes" rows="4" /></label>
+            {formError && (
+              <p className="login-error" role="alert">{formError}</p>
+            )}
             <button className="admin-primary">Create appointment</button>
           </form>
         </div>

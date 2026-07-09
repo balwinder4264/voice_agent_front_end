@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import CalendarView from "./components/CalendarView";
 import ServicesView from "./components/ServicesView";
+import BusinessSettingsView from "./components/BusinessSettingsView";
 
 function formatDate(value) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -148,6 +149,12 @@ export default function Home() {
             onClick={() => setActiveView("services")}
           >
             <span>≡</span> Services
+          </button>
+          <button
+            className={`shop-nav-item ${activeView === "business" ? "active" : ""}`}
+            onClick={() => setActiveView("business")}
+          >
+            <span>⌂</span> Business
           </button>
         </nav>
         <div className="sidebar-status">
@@ -297,8 +304,10 @@ export default function Home() {
         </>
       ) : activeView === "calendar" ? (
         <CalendarView agents={agents} />
-      ) : (
+      ) : activeView === "services" ? (
         <ServicesView />
+      ) : (
+        <BusinessSettingsView />
       )}
         </main>
       </div>
