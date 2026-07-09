@@ -6,6 +6,7 @@ import ServicesView from "./components/ServicesView";
 import BusinessSettingsView from "./components/BusinessSettingsView";
 import AnalyticsView from "./components/AnalyticsView";
 import StaffView from "./components/StaffView";
+import reserveSyncLogo from "./reservesync-dark.svg";
 
 function formatDate(value) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -166,8 +167,7 @@ export default function Home() {
     <div className="shop-shell">
       <aside className="shop-sidebar">
         <div className="shop-brand">
-          <span className="brand-mark">V</span>
-          <span>Voice desk</span>
+          <img className="brand-logo" src={reserveSyncLogo.src} alt="ReserveSync" />
         </div>
         <nav>
           <button

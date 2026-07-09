@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import reserveSyncLogo from "../reservesync-dark.svg";
 
 function agentShopId(agent) {
   return typeof agent.shopId === "object" ? agent.shopId?._id : agent.shopId;
@@ -119,8 +120,7 @@ export default function AdminPage() {
     <div className="admin-shell">
       <aside className="admin-sidebar">
         <div className="shop-brand">
-          <span className="brand-mark">V</span>
-          <span>Voice admin</span>
+          <img className="brand-logo" src={reserveSyncLogo.src} alt="ReserveSync" />
         </div>
         <nav>
           <button

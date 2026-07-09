@@ -72,8 +72,9 @@ header p { margin: 24px 0 0 6px; color: var(--muted); font-size: 17px; }
 
 .shop-shell { min-height: 100vh; display: grid; grid-template-columns: 230px minmax(0, 1fr); }
 .shop-sidebar { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; padding: 28px 18px; color: #e8ece6; background: var(--ink); border-right: 1px solid rgba(255,255,255,.08); }
-.shop-brand { display: flex; align-items: center; gap: 11px; padding: 0 8px 32px; font-weight: 700; letter-spacing: -.02em; }
+.shop-brand { display: inline-flex; align-items: center; align-self: flex-start; gap: 11px; margin: 0 8px 32px; padding: 9px 10px; background: var(--card); border-radius: 6px; font-weight: 700; letter-spacing: -.02em; }
 .brand-mark { display: grid; place-items: center; width: 34px; height: 34px; color: var(--ink); background: var(--acid); border-radius: 10px 3px 10px 3px; font: 600 15px "DM Mono", monospace; }
+.brand-logo { display: block; width: 176px; max-width: 100%; height: auto; }
 .shop-sidebar nav { display: grid; gap: 6px; }
 .shop-nav-item { width: 100%; display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 8px; padding: 12px 13px; border: 0; border-radius: 4px; color: #aeb7b1; background: transparent; text-align: left; cursor: pointer; }
 .shop-nav-item.active { color: var(--ink); background: var(--acid); }
