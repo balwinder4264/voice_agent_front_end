@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import CalendarView from "./components/CalendarView";
 import ServicesView from "./components/ServicesView";
 import BusinessSettingsView from "./components/BusinessSettingsView";
+import AnalyticsView from "./components/AnalyticsView";
 
 function formatDate(value) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -149,6 +150,12 @@ export default function Home() {
             onClick={() => setActiveView("services")}
           >
             <span>≡</span> Services
+          </button>
+          <button
+            className={`shop-nav-item ${activeView === "analytics" ? "active" : ""}`}
+            onClick={() => setActiveView("analytics")}
+          >
+            <span>↗</span> Analytics
           </button>
           <button
             className={`shop-nav-item ${activeView === "business" ? "active" : ""}`}
@@ -306,6 +313,8 @@ export default function Home() {
         <CalendarView agents={agents} />
       ) : activeView === "services" ? (
         <ServicesView />
+      ) : activeView === "analytics" ? (
+        <AnalyticsView />
       ) : (
         <BusinessSettingsView />
       )}

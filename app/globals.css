@@ -148,6 +148,38 @@ header p { margin: 24px 0 0 6px; color: var(--muted); font-size: 17px; }
 .danger-button { padding: 12px 14px; border: 1px solid #b74e32; color: #9b2f20; background: transparent; cursor: pointer; }
 .danger-button:hover { color: white; background: #9b2f20; }
 .business-settings-module { width: min(900px, 100%); }
+.analytics-module { width: 100%; }
+.analytics-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 30px; }
+.analytics-header h1 { margin: 5px 0 0; font-size: clamp(38px, 5vw, 58px); line-height: .9; letter-spacing: -.06em; }
+.analytics-header p { margin: 13px 0 0; color: var(--muted); }
+.usage-cards { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--ink); border-left: 1px solid var(--line); }
+.usage-card { position: relative; min-width: 0; padding: 22px 18px 20px; background: rgba(255,254,249,.68); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.usage-card > span:not(.usage-index) { display: block; color: var(--muted); font: 10px "DM Mono", monospace; text-transform: uppercase; }
+.usage-card .usage-index { position: absolute; top: 14px; right: 14px; color: #b6bbb7; font: 9px "DM Mono", monospace; }
+.usage-card strong { display: block; margin: 25px 0 4px; font-size: clamp(32px, 4vw, 48px); line-height: .9; letter-spacing: -.06em; }
+.usage-card small { font-size: 10px; }
+.analytics-grid { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 14px; margin-top: 14px; }
+.usage-chart-card, .usage-summary-card { background: rgba(255,254,249,.72); border: 1px solid var(--line); }
+.usage-chart-card { padding: 22px; }
+.usage-section-heading { display: flex; justify-content: space-between; gap: 20px; }
+.usage-section-heading div { display: grid; gap: 5px; }
+.usage-section-heading span, .usage-summary-label { color: var(--green); font: 9px "DM Mono", monospace; text-transform: uppercase; letter-spacing: .08em; }
+.usage-section-heading strong { font-size: 17px; }
+.usage-section-heading small { font: 9px "DM Mono", monospace; }
+.usage-chart { height: 230px; display: grid; grid-template-columns: repeat(30, 1fr); align-items: end; gap: 4px; margin-top: 28px; padding-top: 10px; border-bottom: 1px solid var(--ink); background: repeating-linear-gradient(to bottom, transparent 0, transparent 54px, rgba(23,32,28,.07) 55px); }
+.usage-bar-column { position: relative; height: 100%; display: flex; align-items: flex-end; }
+.usage-bar { width: 100%; min-height: 1px; background: #d6d8d2; transition: height .35s ease; }
+.usage-bar.active { background: var(--green); }
+.usage-bar-column:hover .usage-bar.active { background: var(--acid); }
+.usage-bar-column time { position: absolute; bottom: -23px; left: 0; color: var(--muted); font: 8px "DM Mono", monospace; white-space: nowrap; }
+.usage-summary-card { padding: 24px; color: #e8ece6; background: var(--ink); }
+.usage-summary-card > strong { display: block; margin-top: 30px; color: var(--acid); font-size: 58px; line-height: .9; letter-spacing: -.06em; }
+.usage-summary-card > p { margin: 7px 0 34px; color: #aeb7b1; font-size: 12px; }
+.usage-summary-card > div { display: grid; gap: 7px; padding: 15px 0; border-top: 1px solid rgba(255,255,255,.13); }
+.usage-summary-card div span { color: #909a94; font: 9px "DM Mono", monospace; text-transform: uppercase; }
+.usage-summary-card div b { font-size: 14px; }
+.analytics-loading, .analytics-error { min-height: 420px; display: grid; place-content: center; gap: 14px; color: var(--muted); text-align: center; }
+.analytics-error button { padding: 10px 14px; border: 1px solid var(--ink); background: transparent; cursor: pointer; }
 .settings-header { margin-bottom: 28px; }
 .settings-header h1 { margin: 5px 0 0; font-size: clamp(38px, 5vw, 58px); line-height: .9; letter-spacing: -.06em; }
 .settings-header p { margin: 13px 0 0; color: var(--muted); }
@@ -367,6 +399,10 @@ small { color: var(--muted); }
   .settings-fields .wide-field { grid-column: auto; }
   .hours-row { grid-template-columns: 1fr 100px 18px 100px; }
   .settings-save { align-items: stretch; flex-direction: column; }
+  .analytics-header { align-items: flex-start; flex-direction: column; }
+  .usage-cards { grid-template-columns: 1fr 1fr; }
+  .analytics-grid { grid-template-columns: 1fr; }
+  .usage-chart { height: 190px; gap: 2px; }
 }
 
 .admin-login { min-height: 100vh; display: grid; place-items: center; }
