@@ -71,6 +71,15 @@ header p { margin: 24px 0 0 6px; color: var(--muted); font-size: 17px; }
 .logout-button:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
 
 .call-panel { border-top: 1px solid var(--ink); }
+.assigned-agents { margin-bottom: 46px; border-top: 1px solid var(--ink); }
+.assigned-agent-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding-top: 4px; }
+.assigned-agent { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: 14px; padding: 18px; background: rgba(255,254,249,.65); border: 1px solid var(--line); }
+.assigned-agent div { display: flex; flex-direction: column; gap: 4px; }
+.assigned-agent strong { font-size: 14px; }
+.assigned-agent a { color: var(--green); font: 13px "DM Mono", monospace; text-decoration: none; }
+.assigned-agent a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.assigned-agent small { font: 10px "DM Mono", monospace; text-transform: uppercase; }
+.no-assigned-agent { grid-column: 1 / -1; padding: 24px; color: var(--muted); border: 1px dashed var(--line); text-align: center; }
 .panel-heading { display: flex; justify-content: space-between; padding: 14px 2px; color: var(--muted); }
 .call { border-top: 1px solid var(--line); opacity: 0; animation: arrive .45s ease forwards; animation-delay: var(--delay); }
 
@@ -116,6 +125,7 @@ small { color: var(--muted); }
 .shop-login { display: grid; gap: 8px; width: min(320px, 80vw); margin-top: 12px; }
 .shop-login input { padding: 12px; border: 1px solid var(--line); background: var(--card); font: inherit; }
 .shop-login button { padding: 12px; border: 0; background: var(--ink); color: var(--card); cursor: pointer; }
+.login-error { margin: 4px 0 0; padding: 10px 12px; color: #9b2f20; background: #f8dfd8; border-left: 3px solid #c94c37; font-size: 13px; text-align: left; }
 
 .modal-backdrop {
   position: fixed;
@@ -211,6 +221,7 @@ small { color: var(--muted); }
   .recording { grid-template-columns: 1fr; }
   .message { grid-template-columns: 52px 1fr; }
   .message time { display: none; }
+  .assigned-agent-grid { grid-template-columns: 1fr; }
 }
 
 .admin-login { min-height: 100vh; display: grid; place-items: center; }

@@ -13,6 +13,7 @@ export default function AdminPage() {
   const [selectedShopId, setSelectedShopId] = useState(null);
   const [agentForm, setAgentForm] = useState(null);
   const [showShopForm, setShowShopForm] = useState(false);
+  const [loginError, setLoginError] = useState("");
 
   async function load() {
     const [shopResponse, agentResponse] = await Promise.all([
@@ -29,12 +30,17 @@ export default function AdminPage() {
 
   async function login(event) {
     event.preventDefault();
+    setLoginError("");
     const response = await fetch("/api/admin/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))),
     });
-    if (response.ok) load();
+    if (response.ok) {
+      load();
+    } else {
+      setLoginError("Invalid email or password.");
+    }
   }
 
   async function logout() {
@@ -84,6 +90,9 @@ export default function AdminPage() {
           <input name="email" type="email" placeholder="Email" required />
           <input name="password" type="password" placeholder="Password" required />
           <button>Sign in</button>
+          {loginError && (
+            <p className="login-error" role="alert">{loginError}</p>
+          )}
         </form>
       </main>
     );

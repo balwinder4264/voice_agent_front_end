@@ -18,16 +18,22 @@ function formatDuration(seconds = 0) {
 
 export default function Home() {
   const [calls, setCalls] = useState([]);
+  const [agents, setAgents] = useState([]);
   const [selectedCall, setSelectedCall] = useState(null);
   const [state, setState] = useState("loading");
+  const [loginError, setLoginError] = useState("");
 
   async function loadCalls() {
     setState("loading");
 
     try {
-      const response = await fetch("/api/calls");
-      if (!response.ok) throw new Error();
-      setCalls(await response.json());
+      const [callsResponse, agentsResponse] = await Promise.all([
+        fetch("/api/calls"),
+        fetch("/api/agents"),
+      ]);
+      if (!callsResponse.ok || !agentsResponse.ok) throw new Error();
+      setCalls(await callsResponse.json());
+      setAgents(await agentsResponse.json());
       setState("ready");
     } catch {
       setState("error");
@@ -36,6 +42,7 @@ export default function Home() {
 
   async function login(event) {
     event.preventDefault();
+    setLoginError("");
     const form = new FormData(event.currentTarget);
     const response = await fetch("/api/auth/login", {
       method: "POST",
@@ -48,6 +55,8 @@ export default function Home() {
       } else {
         loadCalls();
       }
+    } else {
+      setLoginError("Invalid email or password.");
     }
   }
 
@@ -103,6 +112,34 @@ export default function Home() {
         </div>
       </header>
 
+      {state === "ready" && (
+        <section className="assigned-agents">
+          <div className="panel-heading">
+            <span>Assigned phone numbers</span>
+            <span>{agents.length} {agents.length === 1 ? "agent" : "agents"}</span>
+          </div>
+          <div className="assigned-agent-grid">
+            {agents.map((agent) => (
+              <article className="assigned-agent" key={agent._id}>
+                <span className={`agent-state ${agent.active ? "on" : "off"}`} />
+                <div>
+                  <strong>{agent.name}</strong>
+                  <a href={`tel:${agent.assignedPhoneNumber}`}>
+                    {agent.assignedPhoneNumber}
+                  </a>
+                </div>
+                <small>{agent.active ? "Active" : "Inactive"}</small>
+              </article>
+            ))}
+            {!agents.length && (
+              <div className="no-assigned-agent">
+                No phone number is assigned to this shop.
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       <section className="call-panel">
         <div className="panel-heading">
           <span>Recent calls</span>
@@ -121,6 +158,9 @@ export default function Home() {
                 required
               />
               <button>Sign in</button>
+              {loginError && (
+                <p className="login-error" role="alert">{loginError}</p>
+              )}
             </form>
           </div>
         )}
