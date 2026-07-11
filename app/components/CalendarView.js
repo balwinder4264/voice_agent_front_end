@@ -299,6 +299,9 @@ export default function CalendarView({ agents }) {
             <div>
               <strong>{appointment.title}</strong>
               <span>{appointment.customerName} · {appointment.customerPhone}</span>
+              {appointment.additionalDetails && (
+                <span>{appointment.additionalDetails}</span>
+              )}
               {appointment.staffId?.name && <span>Staff: {appointment.staffId.name}</span>}
             </div>
             <time>{new Date(appointment.startAt).toLocaleString("en-CA")}</time>
@@ -435,6 +438,7 @@ export default function CalendarView({ agents }) {
                 <option value="no_show">No-show</option>
               </select>
             </label>
+            <label>Additional details<textarea name="additionalDetails" rows="4" defaultValue={editingAppointment?.additionalDetails} /></label>
             <label>Notes<textarea name="notes" rows="4" defaultValue={editingAppointment?.notes} /></label>
             {formError && (
               <p className="login-error" role="alert">{formError}</p>
