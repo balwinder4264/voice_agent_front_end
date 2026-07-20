@@ -550,12 +550,13 @@ small { color: var(--muted); }
 .sales-page-header h1 { margin: 5px 0 0; font-size: clamp(44px, 7vw, 76px); line-height: .9; letter-spacing: -.06em; }
 .sales-page-header p { margin: 13px 0 0; color: var(--muted); }
 .sales-shop-list { border-top: 1px solid var(--ink); }
-.sales-shop-row { display: grid; grid-template-columns: 14px minmax(180px,1fr) 120px; align-items: center; gap: 18px; padding: 21px 4px; border-bottom: 1px solid var(--line); opacity: 0; animation: arrive .45s ease forwards; animation-delay: var(--delay); }
+.sales-shop-row { display: grid; grid-template-columns: 14px minmax(180px,1fr) 120px 70px; align-items: center; gap: 18px; padding: 21px 4px; border-bottom: 1px solid var(--line); opacity: 0; animation: arrive .45s ease forwards; animation-delay: var(--delay); }
 .sales-shop-row h2, .sales-shop-row p { margin: 0; }
 .sales-shop-row h2 { font-size: 18px; letter-spacing: -.025em; }
 .sales-shop-row p { margin-top: 4px; color: var(--muted); font-size: 12px; }
+.sales-shop-row button { border: 1px solid var(--line); background: transparent; padding: 8px 12px; cursor: pointer; }
 .manager-shell { min-height: 100vh; display: grid; grid-template-columns: 230px minmax(0, 1fr); }
-.manager-row { display: grid; grid-template-columns: 14px minmax(180px,1fr) 120px 64px; align-items: center; gap: 18px; padding: 21px 4px; border-bottom: 1px solid var(--line); opacity: 0; animation: arrive .45s ease forwards; animation-delay: var(--delay); }
+.manager-row { display: grid; grid-template-columns: 14px minmax(180px,1fr) 120px 70px 64px; align-items: center; gap: 14px; padding: 21px 4px; border-bottom: 1px solid var(--line); opacity: 0; animation: arrive .45s ease forwards; animation-delay: var(--delay); }
 .manager-row h2, .manager-row p { margin: 0; }
 .manager-row h2 { font-size: 18px; letter-spacing: -.025em; }
 .manager-row p { margin-top: 4px; color: var(--muted); font-size: 12px; }

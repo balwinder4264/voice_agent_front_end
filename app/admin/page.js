@@ -277,6 +277,10 @@ export default function AdminPage() {
   const salesReps = salesPeople.filter(
     (person) => (person.salesRole || "rep") === "rep",
   );
+  const activeAgentTemplates = agentTemplates.filter(
+    (template) => template.active,
+  );
+  const editingShop = Boolean(shopForm?._id);
 
   return (
     <div className="admin-shell">
@@ -613,20 +617,20 @@ export default function AdminPage() {
             onMouseDown={(event) => event.stopPropagation()}
           >
             <button type="button" className="sheet-close" onClick={() => setShopForm(null)}>×</button>
-            <span className="admin-kicker">{shopForm._id ? "Shop settings" : "New business"}</span>
-            <h2>{shopForm._id ? "Edit shop" : "Create shop"}</h2>
+            <span className="admin-kicker">{editingShop ? "Shop settings" : "New business"}</span>
+            <h2>{editingShop ? "Edit shop" : "Create shop"}</h2>
             <label>Shop name<input name="name" defaultValue={shopForm.name} required /></label>
-            {!shopForm._id && (
+            {!editingShop && (
               <label>Business type / agent template
                 <select name="agentTemplateId" required defaultValue="">
-                  <option value="" disabled>Select template</option>
-                  {agentTemplates
-                    .filter((template) => template.active)
-                    .map((template) => (
-                      <option key={template._id} value={template._id}>
-                        {template.businessType} - {template.name}
-                      </option>
-                    ))}
+                  <option value="" disabled>
+                    {activeAgentTemplates.length ? "Select template" : "No active templates"}
+                  </option>
+                  {activeAgentTemplates.map((template) => (
+                    <option key={template._id} value={template._id}>
+                      {template.businessType} - {template.name}
+                    </option>
+                  ))}
                 </select>
               </label>
             )}
@@ -660,7 +664,7 @@ export default function AdminPage() {
                   ))}
               </select>
             </label>
-            {shopForm._id ? (
+            {editingShop ? (
               <label>Status
                 <select name="active" defaultValue={String(shopForm.active ?? true)}>
                   <option value="true">Active</option>
@@ -674,7 +678,7 @@ export default function AdminPage() {
               </>
             )}
             <button className="admin-primary">
-              {shopForm._id ? "Save shop" : "Create shop and user"}
+              {editingShop ? "Save shop" : "Create shop and user"}
             </button>
           </form>
         </div>

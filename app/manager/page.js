@@ -28,6 +28,7 @@ export default function ManagerPage() {
   const [shopForm, setShopForm] = useState(null);
   const [repForm, setRepForm] = useState(null);
   const [adminPreview, setAdminPreview] = useState(false);
+  const [agentForm, setAgentForm] = useState(null);
 
   async function load() {
     setState("loading");
@@ -112,6 +113,29 @@ export default function ManagerPage() {
     );
     if (response.ok) {
       setRepForm(null);
+      load();
+    }
+  }
+
+  async function openAgent(shop) {
+    const response = await previewFetch(`/api/manager/shops/${shop._id}/agent`);
+    if (response.ok) {
+      setAgentForm({ shop, agent: await response.json() });
+    }
+  }
+
+  async function saveAgent(event) {
+    event.preventDefault();
+    const response = await previewFetch(
+      `/api/manager/shops/${agentForm.shop._id}/agent`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))),
+      },
+    );
+    if (response.ok) {
+      setAgentForm(null);
       load();
     }
   }
@@ -232,6 +256,7 @@ export default function ManagerPage() {
                     <span className={`service-status ${shop.active ? "active" : "inactive"}`}>
                       {shop.active ? "Active" : "Inactive"}
                     </span>
+                    <button onClick={() => openAgent(shop)}>Agent</button>
                     <button onClick={() => setShopForm(shop)}>Edit</button>
                   </article>
                 ))}
@@ -357,6 +382,35 @@ export default function ManagerPage() {
             <button className="admin-primary">
               {repForm._id ? "Save rep" : "Add rep"}
             </button>
+          </form>
+        </div>
+      )}
+
+      {agentForm && (
+        <div className="admin-overlay" onMouseDown={() => setAgentForm(null)}>
+          <form
+            className="admin-sheet"
+            onSubmit={saveAgent}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button type="button" className="sheet-close" onClick={() => setAgentForm(null)}>x</button>
+            <span className="admin-kicker">{agentForm.shop.name}</span>
+            <h2>Edit agent</h2>
+            <div className="form-pair">
+              <label>Agent name<input name="name" defaultValue={agentForm.agent.name} required /></label>
+              <label>Phone number<input name="assignedPhoneNumber" defaultValue={agentForm.agent.assignedPhoneNumber} placeholder="+14165551234" /></label>
+              <label>Voice<input name="voice" defaultValue={agentForm.agent.voice || "marin"} required /></label>
+              <label>Language<input name="language" defaultValue={agentForm.agent.language || "en"} required /></label>
+            </div>
+            <label>Opening greeting<textarea name="greeting" rows="3" defaultValue={agentForm.agent.greeting} required /></label>
+            <label>Agent instructions<textarea name="instructions" rows="12" defaultValue={agentForm.agent.instructions} required /></label>
+            <label>Status
+              <select name="active" defaultValue={String(agentForm.agent.active ?? true)}>
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </select>
+            </label>
+            <button className="admin-primary">Save agent</button>
           </form>
         </div>
       )}
