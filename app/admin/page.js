@@ -7,13 +7,28 @@ function agentShopId(agent) {
   return typeof agent.shopId === "object" ? agent.shopId?._id : agent.shopId;
 }
 
+function shopSalesPersonId(shop) {
+  return typeof shop.assignedSalesPersonId === "object"
+    ? shop.assignedSalesPersonId?._id
+    : shop.assignedSalesPersonId;
+}
+
+function salesPersonName(shop) {
+  return typeof shop.assignedSalesPersonId === "object"
+    ? shop.assignedSalesPersonId?.name
+    : null;
+}
+
 export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false);
   const [shops, setShops] = useState([]);
   const [agents, setAgents] = useState([]);
+  const [salesPeople, setSalesPeople] = useState([]);
+  const [activeSection, setActiveSection] = useState("shops");
   const [selectedShopId, setSelectedShopId] = useState(null);
   const [agentForm, setAgentForm] = useState(null);
-  const [showShopForm, setShowShopForm] = useState(false);
+  const [shopForm, setShopForm] = useState(null);
+  const [salesPersonForm, setSalesPersonForm] = useState(null);
   const [loginError, setLoginError] = useState("");
   const [search, setSearch] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
@@ -26,15 +41,17 @@ export default function AdminPage() {
   });
 
   async function load(page = 1, query = search) {
-    const [shopResponse, agentResponse] = await Promise.all([
+    const [shopResponse, agentResponse, salesPeopleResponse] = await Promise.all([
       fetch(`/api/admin/shops?page=${page}&q=${encodeURIComponent(query)}`),
       fetch("/api/admin/agents"),
+      fetch("/api/admin/sales-people"),
     ]);
     if (!shopResponse.ok) return setAuthenticated(false);
     const shopData = await shopResponse.json();
     setShops(shopData.shops);
     setPagination(shopData.pagination);
     setAgents(await agentResponse.json());
+    setSalesPeople(await salesPeopleResponse.json());
     setAuthenticated(true);
   }
 
@@ -60,18 +77,42 @@ export default function AdminPage() {
     window.location.href = "/";
   }
 
-  async function createShop(event) {
+  async function saveShop(event) {
     event.preventDefault();
-    const response = await fetch("/api/admin/shops", {
-      method: "POST",
+    const body = Object.fromEntries(new FormData(event.currentTarget));
+    const editing = Boolean(shopForm?._id);
+    const response = await fetch(`/api/admin/shops${editing ? `/${shopForm._id}` : ""}`, {
+      method: editing ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))),
+      body: JSON.stringify(body),
     });
     if (response.ok) {
       event.currentTarget.reset();
-      setShowShopForm(false);
-      setSearch("");
-      load(1, "");
+      setShopForm(null);
+      if (editing) {
+        load(pagination.page, search);
+      } else {
+        setSearch("");
+        load(1, "");
+      }
+    }
+  }
+
+  async function saveSalesPerson(event) {
+    event.preventDefault();
+    const body = Object.fromEntries(new FormData(event.currentTarget));
+    const editing = Boolean(salesPersonForm?._id);
+    const response = await fetch(
+      `/api/admin/sales-people${editing ? `/${salesPersonForm._id}` : ""}`,
+      {
+        method: editing ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      },
+    );
+    if (response.ok) {
+      setSalesPersonForm(null);
+      load(pagination.page, search);
     }
   }
 
@@ -124,11 +165,25 @@ export default function AdminPage() {
         </div>
         <nav>
           <button
-            className="admin-nav-item active"
-            onClick={() => setSelectedShopId(null)}
+            className={`admin-nav-item ${activeSection === "shops" ? "active" : ""}`}
+            onClick={() => {
+              setActiveSection("shops");
+              setSelectedShopId(null);
+            }}
           >
             <span>◆</span> Shops
             <small>{pagination.total}</small>
+          </button>
+          <button
+            className={`admin-nav-item ${activeSection === "sales" ? "active" : ""}`}
+            onClick={() => {
+              setActiveSection("sales");
+              setSelectedShopId(null);
+              setAgentForm(null);
+            }}
+          >
+            <span>◈</span> Sales
+            <small>{salesPeople.length}</small>
           </button>
         </nav>
         <div className="sidebar-status">
@@ -159,18 +214,19 @@ export default function AdminPage() {
         </div>
 
     <main className="admin">
-      <header className="admin-header">
-        <div>
-          <span className="admin-kicker">Business directory</span>
-          <h1>Shops</h1>
-          <p>{pagination.total} shops · Select one to manage its agents.</p>
-        </div>
-        <button className="admin-primary" onClick={() => setShowShopForm(true)}>
-          + Create shop
-        </button>
-      </header>
-
-      {!selectedShop ? (
+      {activeSection === "shops" && (
+        <>
+        <header className="admin-header">
+          <div>
+            <span className="admin-kicker">Business directory</span>
+            <h1>Shops</h1>
+            <p>{pagination.total} shops · Select one to manage its agents.</p>
+          </div>
+          <button className="admin-primary" onClick={() => setShopForm({})}>
+            + Create shop
+          </button>
+        </header>
+        {!selectedShop ? (
         <>
         <form
           className="admin-search"
@@ -215,7 +271,11 @@ export default function AdminPage() {
                 </span>
                 <div>
                   <h2>{shop.name}</h2>
-                  <p>{count} {count === 1 ? "agent" : "agents"}</p>
+                  <p>
+                    {count} {count === 1 ? "agent" : "agents"}
+                    {" · "}
+                    {salesPersonName(shop) || "Unassigned"}
+                  </p>
                 </div>
                 <span className="shop-arrow">→</span>
               </button>
@@ -258,10 +318,21 @@ export default function AdminPage() {
             <div>
               <span className="admin-kicker">Shop workspace</span>
               <h2>{selectedShop.name}</h2>
+              <p className="shop-sales-owner">
+                Sales: {salesPersonName(selectedShop) || "Unassigned"}
+              </p>
             </div>
-            <button className="admin-primary" onClick={() => setAgentForm({})}>
-              + Create agent
-            </button>
+            <div className="admin-header-actions">
+              <button
+                className="admin-secondary"
+                onClick={() => setShopForm(selectedShop)}
+              >
+                Edit shop
+              </button>
+              <button className="admin-primary" onClick={() => setAgentForm({})}>
+                + Create agent
+              </button>
+            </div>
           </div>
 
           <div className="agent-list">
@@ -284,21 +355,123 @@ export default function AdminPage() {
           </div>
         </section>
       )}
+      </>
+      )}
 
-      {showShopForm && (
-        <div className="admin-overlay" onMouseDown={() => setShowShopForm(false)}>
+      {activeSection === "sales" && (
+        <section className="sales-team">
+          <header className="admin-header">
+            <div>
+              <span className="admin-kicker">Assignment team</span>
+              <h1>Sales Team</h1>
+              <p>{salesPeople.length} people available for shop assignment.</p>
+            </div>
+            <button className="admin-primary" onClick={() => setSalesPersonForm({})}>
+              + Add sales person
+            </button>
+          </header>
+
+          <div className="sales-list">
+            {salesPeople.map((person) => {
+              const assignedCount = person.assignedShopCount || 0;
+              return (
+                <article className="sales-row" key={person._id}>
+                  <span className={`agent-state ${person.active ? "on" : "off"}`} />
+                  <div>
+                    <h3>{person.name}</h3>
+                    <p>{person.email || "No email"} · {person.phone || "No phone"}</p>
+                  </div>
+                  <span className="agent-meta">
+                    {assignedCount} {assignedCount === 1 ? "shop" : "shops"}
+                  </span>
+                  <button onClick={() => setSalesPersonForm(person)}>Edit</button>
+                </article>
+              );
+            })}
+            {!salesPeople.length && (
+              <div className="admin-empty">Add sales people before assigning shops.</div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {shopForm && (
+        <div className="admin-overlay" onMouseDown={() => setShopForm(null)}>
           <form
             className="admin-sheet compact"
-            onSubmit={createShop}
+            onSubmit={saveShop}
             onMouseDown={(event) => event.stopPropagation()}
           >
-            <button type="button" className="sheet-close" onClick={() => setShowShopForm(false)}>×</button>
-            <span className="admin-kicker">New business</span>
-            <h2>Create shop</h2>
-            <label>Shop name<input name="name" required /></label>
-            <label>Owner login email<input name="email" type="email" required /></label>
-            <label>Temporary password<input name="password" type="password" required /></label>
-            <button className="admin-primary">Create shop and user</button>
+            <button type="button" className="sheet-close" onClick={() => setShopForm(null)}>×</button>
+            <span className="admin-kicker">{shopForm._id ? "Shop settings" : "New business"}</span>
+            <h2>{shopForm._id ? "Edit shop" : "Create shop"}</h2>
+            <label>Shop name<input name="name" defaultValue={shopForm.name} required /></label>
+            <label>Assigned sales person
+              <select
+                name="assignedSalesPersonId"
+                defaultValue={shopSalesPersonId(shopForm) || ""}
+              >
+                <option value="">Unassigned</option>
+                {salesPeople
+                  .filter((person) => person.active || person._id === shopSalesPersonId(shopForm))
+                  .map((person) => (
+                    <option key={person._id} value={person._id}>
+                      {person.name}{person.active ? "" : " (inactive)"}
+                    </option>
+                  ))}
+              </select>
+            </label>
+            {shopForm._id ? (
+              <label>Status
+                <select name="active" defaultValue={String(shopForm.active ?? true)}>
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </select>
+              </label>
+            ) : (
+              <>
+                <label>Owner login email<input name="email" type="email" required /></label>
+                <label>Temporary password<input name="password" type="password" required /></label>
+              </>
+            )}
+            <button className="admin-primary">
+              {shopForm._id ? "Save shop" : "Create shop and user"}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {salesPersonForm && (
+        <div className="admin-overlay" onMouseDown={() => setSalesPersonForm(null)}>
+          <form
+            className="admin-sheet compact"
+            key={salesPersonForm._id || "new-sales-person"}
+            onSubmit={saveSalesPerson}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button type="button" className="sheet-close" onClick={() => setSalesPersonForm(null)}>×</button>
+            <span className="admin-kicker">Sales Team</span>
+            <h2>{salesPersonForm._id ? "Edit person" : "Add person"}</h2>
+            <label>Name<input name="name" defaultValue={salesPersonForm.name} required /></label>
+            <label>Email<input name="email" type="email" defaultValue={salesPersonForm.email} /></label>
+            <label>Phone<input name="phone" defaultValue={salesPersonForm.phone} /></label>
+            <label>
+              {salesPersonForm.userId ? "Reset login password" : "Temporary login password"}
+              <input
+                name="password"
+                type="password"
+                placeholder={salesPersonForm.userId ? "Leave blank to keep current password" : "Optional until portal access is needed"}
+              />
+            </label>
+            <label>Status
+              <select name="active" defaultValue={String(salesPersonForm.active ?? true)}>
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </select>
+            </label>
+            <button className="admin-primary">
+              {salesPersonForm._id ? "Save person" : "Add sales person"}
+            </button>
           </form>
         </div>
       )}

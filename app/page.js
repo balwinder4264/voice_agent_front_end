@@ -90,6 +90,8 @@ export default function Home() {
       const user = await response.json();
       if (user.role === "admin") {
         window.location.href = "/admin";
+      } else if (user.role === "sales") {
+        window.location.href = "/sales";
       } else {
         const profile = {
           name: user.name,
