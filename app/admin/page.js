@@ -13,10 +13,20 @@ function shopSalesPersonId(shop) {
     : shop.assignedSalesPersonId;
 }
 
+function shopSalesManagerId(shop) {
+  return typeof shop.salesManagerId === "object"
+    ? shop.salesManagerId?._id
+    : shop.salesManagerId;
+}
+
 function salesPersonName(shop) {
   return typeof shop.assignedSalesPersonId === "object"
     ? shop.assignedSalesPersonId?.name
     : null;
+}
+
+function salesManagerName(shop) {
+  return typeof shop.salesManagerId === "object" ? shop.salesManagerId?.name : null;
 }
 
 export default function AdminPage() {
@@ -182,6 +192,12 @@ export default function AdminPage() {
   const shopAgents = agents.filter(
     (agent) => agentShopId(agent) === selectedShopId,
   );
+  const salesManagers = salesPeople.filter(
+    (person) => person.salesRole === "manager",
+  );
+  const salesReps = salesPeople.filter(
+    (person) => (person.salesRole || "rep") === "rep",
+  );
 
   return (
     <div className="admin-shell">
@@ -303,7 +319,9 @@ export default function AdminPage() {
                     <p>
                       {count} {count === 1 ? "agent" : "agents"}
                       {" · "}
-                      {salesPersonName(shop) || "Unassigned"}
+                      Rep: {salesPersonName(shop) || "Unassigned"}
+                      {" · "}
+                      Manager: {salesManagerName(shop) || "Unassigned"}
                     </p>
                   </div>
                 </button>
@@ -360,6 +378,8 @@ export default function AdminPage() {
               <h2>{selectedShop.name}</h2>
               <p className="shop-sales-owner">
                 Sales: {salesPersonName(selectedShop) || "Unassigned"}
+                {" · "}
+                Manager: {salesManagerName(selectedShop) || "Unassigned"}
               </p>
             </div>
             <div className="admin-header-actions">
@@ -425,10 +445,16 @@ export default function AdminPage() {
                   <span className={`agent-state ${person.active ? "on" : "off"}`} />
                   <div>
                     <h3>{person.name}</h3>
-                    <p>{person.email || "No email"} · {person.phone || "No phone"}</p>
+                    <p>
+                      {(person.salesRole || "rep") === "manager" ? "Manager" : "Rep"}
+                      {" · "}
+                      {person.email || "No email"} · {person.phone || "No phone"}
+                    </p>
                   </div>
                   <span className="agent-meta">
-                    {assignedCount} {assignedCount === 1 ? "shop" : "shops"}
+                    {(person.salesRole || "rep") === "manager"
+                      ? `${person.managedShopCount || 0} managed`
+                      : `${assignedCount} assigned`}
                   </span>
                   <button onClick={() => openSalesPreview(person._id)}>Portal</button>
                   <button onClick={() => setSalesPersonForm(person)}>Edit</button>
@@ -459,8 +485,23 @@ export default function AdminPage() {
                 defaultValue={shopSalesPersonId(shopForm) || ""}
               >
                 <option value="">Unassigned</option>
-                {salesPeople
+                {salesReps
                   .filter((person) => person.active || person._id === shopSalesPersonId(shopForm))
+                  .map((person) => (
+                    <option key={person._id} value={person._id}>
+                      {person.name}{person.active ? "" : " (inactive)"}
+                    </option>
+                  ))}
+              </select>
+            </label>
+            <label>Sales manager
+              <select
+                name="salesManagerId"
+                defaultValue={shopSalesManagerId(shopForm) || ""}
+              >
+                <option value="">Unassigned</option>
+                {salesManagers
+                  .filter((person) => person.active || person._id === shopSalesManagerId(shopForm))
                   .map((person) => (
                     <option key={person._id} value={person._id}>
                       {person.name}{person.active ? "" : " (inactive)"}
@@ -502,6 +543,24 @@ export default function AdminPage() {
             <label>Name<input name="name" defaultValue={salesPersonForm.name} required /></label>
             <label>Email<input name="email" type="email" defaultValue={salesPersonForm.email} /></label>
             <label>Phone<input name="phone" defaultValue={salesPersonForm.phone} /></label>
+            <label>Sales role
+              <select name="salesRole" defaultValue={salesPersonForm.salesRole || "rep"}>
+                <option value="rep">Sales rep</option>
+                <option value="manager">Sales manager</option>
+              </select>
+            </label>
+            <label>Manager for rep
+              <select name="managerId" defaultValue={salesPersonForm.managerId || ""}>
+                <option value="">No manager</option>
+                {salesManagers
+                  .filter((person) => person._id !== salesPersonForm._id)
+                  .map((person) => (
+                    <option key={person._id} value={person._id}>
+                      {person.name}
+                    </option>
+                  ))}
+              </select>
+            </label>
             <label>
               {salesPersonForm.userId ? "Reset login password" : "Temporary login password"}
               <input

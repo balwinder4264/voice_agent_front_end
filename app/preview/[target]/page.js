@@ -10,14 +10,16 @@ export default function PreviewBootstrapPage() {
   useEffect(() => {
     const target = params.target;
     const token = decodeURIComponent(window.location.hash.replace(/^#/, ""));
-    if (!token || !["shop", "sales"].includes(target)) {
+    if (!token || !["shop", "sales", "manager"].includes(target)) {
       window.location.replace("/admin");
       return;
     }
 
     window.sessionStorage.setItem(PREVIEW_TOKEN_KEY, token);
     window.sessionStorage.setItem(PREVIEW_TARGET_KEY, target);
-    window.location.replace(target === "sales" ? "/sales" : "/");
+    window.location.replace(
+      target === "manager" ? "/manager" : target === "sales" ? "/sales" : "/",
+    );
   }, [params.target]);
 
   return (
