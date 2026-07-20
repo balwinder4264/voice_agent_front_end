@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { portalHeaders } from "../../previewHeaders";
 
 export async function PATCH(request, { params }) {
   const { id } = await params;
@@ -7,8 +7,7 @@ export async function PATCH(request, { params }) {
     {
       method: "PATCH",
       headers: {
-        "Content-Type": "application/json",
-        cookie: (await cookies()).toString(),
+        ...(await portalHeaders(request)),
       },
       body: await request.text(),
       cache: "no-store",

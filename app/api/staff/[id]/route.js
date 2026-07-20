@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { portalHeaders } from "../../previewHeaders";
 
 async function forward(request, { params }) {
   const { id } = await params;
@@ -7,8 +7,7 @@ async function forward(request, { params }) {
     {
       method: request.method,
       headers: {
-        "Content-Type": "application/json",
-        cookie: (await cookies()).toString(),
+        ...(await portalHeaders(request)),
       },
       body: request.method === "DELETE" ? undefined : await request.text(),
       cache: "no-store",

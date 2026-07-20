@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { previewFetch } from "../previewSession";
 
 const days = [
   "monday", "tuesday", "wednesday", "thursday",
@@ -37,8 +38,8 @@ export default function StaffView() {
 
   async function load() {
     const [staffResponse, servicesResponse] = await Promise.all([
-      fetch("/api/staff"),
-      fetch("/api/services"),
+      previewFetch("/api/staff"),
+      previewFetch("/api/services"),
     ]);
     if (staffResponse.ok) setStaff(await staffResponse.json());
     if (servicesResponse.ok) setServices(await servicesResponse.json());
@@ -79,7 +80,7 @@ export default function StaffView() {
         endAt: new Date(`${entry.endAt}T23:59:59.999`).toISOString(),
       })),
     };
-    const response = await fetch(
+    const response = await previewFetch(
       `/api/staff${editing._id ? `/${editing._id}` : ""}`,
       {
         method: editing._id ? "PATCH" : "POST",
@@ -98,7 +99,7 @@ export default function StaffView() {
 
   async function deleteStaff() {
     if (!window.confirm(`Delete ${editing.name}?`)) return;
-    const response = await fetch(`/api/staff/${editing._id}`, { method: "DELETE" });
+    const response = await previewFetch(`/api/staff/${editing._id}`, { method: "DELETE" });
     if (response.ok) {
       setEditing(null);
       load();

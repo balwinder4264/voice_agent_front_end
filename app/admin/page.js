@@ -116,6 +116,32 @@ export default function AdminPage() {
     }
   }
 
+  async function openShopPreview(shopId) {
+    const response = await fetch(`/api/admin/shops/${shopId}/preview`, {
+      method: "POST",
+    });
+    if (!response.ok) return;
+    const preview = await response.json();
+    window.open(
+      `${preview.previewPath}#${encodeURIComponent(preview.token)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  }
+
+  async function openSalesPreview(salesPersonId) {
+    const response = await fetch(`/api/admin/sales-people/${salesPersonId}/preview`, {
+      method: "POST",
+    });
+    if (!response.ok) return;
+    const preview = await response.json();
+    window.open(
+      `${preview.previewPath}#${encodeURIComponent(preview.token)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  }
+
   async function saveAgent(event) {
     event.preventDefault();
     const body = Object.fromEntries(new FormData(event.currentTarget));
@@ -261,24 +287,38 @@ export default function AdminPage() {
               (agent) => agentShopId(agent) === shop._id,
             ).length;
             return (
-              <button
-                className="shop-card"
+              <article
+                className="shop-row"
                 key={shop._id}
-                onClick={() => setSelectedShopId(shop._id)}
               >
-                <span className="shop-number">
-                  {String(count).padStart(2, "0")}
-                </span>
-                <div>
-                  <h2>{shop.name}</h2>
-                  <p>
-                    {count} {count === 1 ? "agent" : "agents"}
-                    {" · "}
-                    {salesPersonName(shop) || "Unassigned"}
-                  </p>
+                <button
+                  className="shop-card-main"
+                  onClick={() => setSelectedShopId(shop._id)}
+                >
+                  <span className="shop-number">
+                    {String(count).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <h2>{shop.name}</h2>
+                    <p>
+                      {count} {count === 1 ? "agent" : "agents"}
+                      {" · "}
+                      {salesPersonName(shop) || "Unassigned"}
+                    </p>
+                  </div>
+                </button>
+                <div className="shop-row-actions">
+                  <button onClick={() => setSelectedShopId(shop._id)}>
+                    Manage
+                  </button>
+                  <button onClick={() => openShopPreview(shop._id)}>
+                    Portal
+                  </button>
+                  <button onClick={() => setShopForm(shop)}>
+                    Edit
+                  </button>
                 </div>
-                <span className="shop-arrow">→</span>
-              </button>
+              </article>
             );
           })}
           {!shops.length && (
@@ -328,6 +368,12 @@ export default function AdminPage() {
                 onClick={() => setShopForm(selectedShop)}
               >
                 Edit shop
+              </button>
+              <button
+                className="admin-secondary"
+                onClick={() => openShopPreview(selectedShop._id)}
+              >
+                View shop portal
               </button>
               <button className="admin-primary" onClick={() => setAgentForm({})}>
                 + Create agent
@@ -384,6 +430,7 @@ export default function AdminPage() {
                   <span className="agent-meta">
                     {assignedCount} {assignedCount === 1 ? "shop" : "shops"}
                   </span>
+                  <button onClick={() => openSalesPreview(person._id)}>Portal</button>
                   <button onClick={() => setSalesPersonForm(person)}>Edit</button>
                 </article>
               );

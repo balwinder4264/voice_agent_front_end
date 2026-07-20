@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { portalHeaders } from "../previewHeaders";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +8,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const response = await fetch(
       `${process.env.BACKEND_URL || "http://localhost:3000"}/api/shop/calls?${searchParams.toString()}`,
-      { cache: "no-store", headers: { cookie: (await cookies()).toString() } },
+      { cache: "no-store", headers: await portalHeaders(request, null) },
     );
 
     if (!response.ok) {

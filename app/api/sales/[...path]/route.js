@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { portalHeaders } from "../../previewHeaders";
 
 async function forward(request, { params }) {
   const { path } = await params;
@@ -8,8 +8,7 @@ async function forward(request, { params }) {
     {
       method: request.method,
       headers: {
-        "Content-Type": "application/json",
-        cookie: (await cookies()).toString(),
+        ...(await portalHeaders(request)),
       },
       body: request.method === "GET" ? undefined : await request.text(),
       cache: "no-store",

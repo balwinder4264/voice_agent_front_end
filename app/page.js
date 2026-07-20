@@ -7,6 +7,7 @@ import BusinessSettingsView from "./components/BusinessSettingsView";
 import AnalyticsView from "./components/AnalyticsView";
 import StaffView from "./components/StaffView";
 import reserveSyncLogo from "./reservesync-dark.svg";
+import { clearPreviewSession, getPreviewTarget, previewFetch } from "./previewSession";
 
 function formatDate(value) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -31,6 +32,8 @@ export default function Home() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [activeView, setActiveView] = useState("calendar");
   const [shopUser, setShopUser] = useState(null);
+  const [adminPreview, setAdminPreview] = useState(false);
+  const [previewRecordingUrl, setPreviewRecordingUrl] = useState("");
   const [search, setSearch] = useState("");
   const [pagination, setPagination] = useState({
     page: 1,
@@ -45,8 +48,8 @@ export default function Home() {
 
     try {
       const [callsResponse, agentsResponse] = await Promise.all([
-        fetch(`/api/calls?page=${page}&q=${encodeURIComponent(query)}`),
-        fetch("/api/agents"),
+        previewFetch(`/api/calls?page=${page}&q=${encodeURIComponent(query)}`),
+        previewFetch("/api/agents"),
       ]);
       if (!callsResponse.ok || !agentsResponse.ok) throw new Error();
       const callData = await callsResponse.json();
@@ -61,7 +64,7 @@ export default function Home() {
 
   async function loadShopUser() {
     try {
-      const response = await fetch("/api/settings");
+      const response = await previewFetch("/api/settings");
       if (!response.ok) return;
       const settings = await response.json();
       const profile = {
@@ -69,6 +72,7 @@ export default function Home() {
         email: settings.userEmail,
         shopName: settings.shopName,
       };
+      setAdminPreview(Boolean(settings.adminPreview));
       if (profile.email) {
         localStorage.setItem("shop_user", JSON.stringify(profile));
         setShopUser(profile);
@@ -109,6 +113,7 @@ export default function Home() {
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
+    clearPreviewSession();
     localStorage.removeItem("shop_user");
     window.location.href = "/";
   }
@@ -120,6 +125,9 @@ export default function Home() {
 
   useEffect(() => {
     const savedUser = localStorage.getItem("shop_user");
+    if (getPreviewTarget() === "shop") {
+      setAdminPreview(true);
+    }
     if (savedUser) {
       try {
         setShopUser(JSON.parse(savedUser));
@@ -146,6 +154,32 @@ export default function Home() {
       window.removeEventListener("keydown", closeOnEscape);
     };
   }, [selectedCall]);
+
+  useEffect(() => {
+    if (!selectedCall || !adminPreview || !selectedCall.hasRecording) {
+      setPreviewRecordingUrl("");
+      return;
+    }
+
+    let active = true;
+    let objectUrl = "";
+    previewFetch(`/api/calls/${selectedCall.id}/recording`)
+      .then((response) => {
+        if (!response.ok) throw new Error();
+        return response.blob();
+      })
+      .then((blob) => {
+        if (!active) return;
+        objectUrl = URL.createObjectURL(blob);
+        setPreviewRecordingUrl(objectUrl);
+      })
+      .catch(() => setPreviewRecordingUrl(""));
+
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [adminPreview, selectedCall]);
 
   if (state === "error") {
     return (
@@ -221,6 +255,20 @@ export default function Home() {
 
       <div className="shop-workspace">
         <div className="shop-topbar">
+          {adminPreview && (
+            <div className="preview-banner">
+              <span>Admin preview</span>
+              <button
+                onClick={() => {
+                  clearPreviewSession();
+                  window.close();
+                  window.location.href = "/admin";
+                }}
+              >
+                Exit preview
+              </button>
+            </div>
+          )}
           <div className="topbar-numbers">
             <span>Assigned</span>
             {agents.length ? agents.map((agent) => (
@@ -411,7 +459,11 @@ export default function Home() {
                 <audio
                   controls
                   preload="none"
-                  src={`/api/calls/${selectedCall.id}/recording`}
+                  src={
+                    adminPreview
+                      ? previewRecordingUrl
+                      : `/api/calls/${selectedCall.id}/recording`
+                  }
                 />
               ) : (
                 <small>Recording unavailable</small>

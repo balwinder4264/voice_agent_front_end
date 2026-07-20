@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import reserveSyncLogo from "../reservesync-dark.svg";
+import { clearPreviewSession, getPreviewTarget, previewFetch } from "../previewSession";
 
 function formatDate(value) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -17,16 +18,19 @@ export default function SalesPage() {
   const [state, setState] = useState("loading");
   const [loginError, setLoginError] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
+  const [adminPreview, setAdminPreview] = useState(false);
 
   async function loadPortal() {
     setState("loading");
     try {
       const [meResponse, shopsResponse] = await Promise.all([
-        fetch("/api/sales/me"),
-        fetch("/api/sales/shops"),
+        previewFetch("/api/sales/me"),
+        previewFetch("/api/sales/shops"),
       ]);
       if (!meResponse.ok || !shopsResponse.ok) throw new Error();
-      setSalesUser(await meResponse.json());
+      const me = await meResponse.json();
+      setSalesUser(me);
+      setAdminPreview(Boolean(me.adminPreview));
       const shopData = await shopsResponse.json();
       setShops(shopData.shops || []);
       setState("ready");
@@ -53,6 +57,7 @@ export default function SalesPage() {
 
   async function logout() {
     await fetch("/api/sales/auth/logout", { method: "POST" });
+    clearPreviewSession();
     setSalesUser(null);
     setShops([]);
     setState("login");
@@ -60,6 +65,7 @@ export default function SalesPage() {
 
   useEffect(() => {
     loadPortal();
+    if (getPreviewTarget() === "sales") setAdminPreview(true);
   }, []);
 
   if (state === "login") {
@@ -103,6 +109,20 @@ export default function SalesPage() {
 
       <div className="sales-workspace">
         <div className="shop-topbar">
+          {adminPreview && (
+            <div className="preview-banner">
+              <span>Admin preview</span>
+              <button
+                onClick={() => {
+                  clearPreviewSession();
+                  window.close();
+                  window.location.href = "/admin";
+                }}
+              >
+                Exit preview
+              </button>
+            </div>
+          )}
           <span className="sales-topbar-label">Sales Portal</span>
           <div className="profile-menu">
             <button

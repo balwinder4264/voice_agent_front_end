@@ -1,13 +1,13 @@
 export const dynamic = "force-dynamic";
-import { cookies } from "next/headers";
+import { portalHeaders } from "../../../previewHeaders";
 
-export async function GET(_request, { params }) {
+export async function GET(request, { params }) {
   const { id } = await params;
 
   try {
     const response = await fetch(
       `${process.env.BACKEND_URL || "http://localhost:3000"}/api/shop/calls/${id}/recording`,
-      { cache: "no-store", headers: { cookie: (await cookies()).toString() } },
+      { cache: "no-store", headers: await portalHeaders(request, null) },
     );
 
     if (!response.ok) {

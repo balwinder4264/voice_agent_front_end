@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { portalHeaders } from "../../previewHeaders";
 
 export async function PATCH(request, { params }) {
   const { id } = await params;
@@ -7,8 +7,7 @@ export async function PATCH(request, { params }) {
     {
       method: "PATCH",
       headers: {
-        "Content-Type": "application/json",
-        cookie: (await cookies()).toString(),
+        ...(await portalHeaders(request)),
       },
       body: await request.text(),
       cache: "no-store",
@@ -22,13 +21,13 @@ export async function PATCH(request, { params }) {
   });
 }
 
-export async function DELETE(_request, { params }) {
+export async function DELETE(request, { params }) {
   const { id } = await params;
   const response = await fetch(
     `${process.env.BACKEND_URL || "http://localhost:3000"}/api/shop/services/${id}`,
     {
       method: "DELETE",
-      headers: { cookie: (await cookies()).toString() },
+      headers: await portalHeaders(request, null),
       cache: "no-store",
     },
   );

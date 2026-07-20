@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { previewFetch } from "../previewSession";
 
 function minutes(seconds = 0) {
   const value = seconds / 60;
@@ -19,7 +20,7 @@ export default function AnalyticsView() {
   async function loadAnalytics() {
     setState("loading");
     try {
-      const response = await fetch("/api/analytics", { cache: "no-store" });
+      const response = await previewFetch("/api/analytics", { cache: "no-store" });
       if (!response.ok) throw new Error();
       setData(await response.json());
       setState("ready");

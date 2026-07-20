@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { previewFetch } from "../previewSession";
 
 function startOfCalendar(date) {
   const start = new Date(date.getFullYear(), date.getMonth(), 1);
@@ -117,7 +118,7 @@ export default function CalendarView({ agents }) {
   async function loadAppointments() {
     setLoading(true);
     const end = addDays(calendarStart, visibleDayCount);
-    const response = await fetch(
+    const response = await previewFetch(
       `/api/appointments?start=${encodeURIComponent(calendarStart.toISOString())}&end=${encodeURIComponent(end.toISOString())}`,
     );
     if (response.ok) setAppointments(await response.json());
@@ -130,8 +131,8 @@ export default function CalendarView({ agents }) {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/services").then((response) => (response.ok ? response.json() : [])),
-      fetch("/api/staff").then((response) => (response.ok ? response.json() : [])),
+      previewFetch("/api/services").then((response) => (response.ok ? response.json() : [])),
+      previewFetch("/api/staff").then((response) => (response.ok ? response.json() : [])),
     ]).then(([serviceResult, staffResult]) => {
       setServices(serviceResult.filter((service) => service.active));
       setStaff(staffResult.filter((person) => person.active));
@@ -150,7 +151,7 @@ export default function CalendarView({ agents }) {
     );
     if (!data.agentId) data.agentId = null;
 
-    const response = await fetch(
+    const response = await previewFetch(
       `/api/appointments${editingAppointment ? `/${editingAppointment._id}` : ""}`,
       {
       method: editingAppointment ? "PATCH" : "POST",
@@ -176,7 +177,7 @@ export default function CalendarView({ agents }) {
   }
 
   async function updateStatus(id, status) {
-    const response = await fetch(`/api/appointments/${id}`, {
+    const response = await previewFetch(`/api/appointments/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),

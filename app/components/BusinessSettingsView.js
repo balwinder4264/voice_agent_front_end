@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import countries from "i18n-iso-countries";
 import englishCountries from "i18n-iso-countries/langs/en.json";
+import { previewFetch } from "../previewSession";
 
 countries.registerLocale(englishCountries);
 
@@ -34,7 +35,7 @@ export default function BusinessSettingsView() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    fetch("/api/settings")
+    previewFetch("/api/settings")
       .then((response) => response.json())
       .then(setSettings);
   }, []);
@@ -52,7 +53,7 @@ export default function BusinessSettingsView() {
     event.preventDefault();
     setMessage("");
     const values = Object.fromEntries(new FormData(event.currentTarget));
-    const response = await fetch("/api/settings", {
+    const response = await previewFetch("/api/settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { previewFetch } from "../previewSession";
 
 function priceLabel(priceCents) {
   if (priceCents === undefined || priceCents === null) return "Price not set";
@@ -16,7 +17,7 @@ export default function ServicesView() {
   const [error, setError] = useState("");
 
   async function loadServices() {
-    const response = await fetch("/api/services");
+    const response = await previewFetch("/api/services");
     if (response.ok) setServices(await response.json());
   }
 
@@ -37,7 +38,7 @@ export default function ServicesView() {
     };
     delete body.price;
 
-    const response = await fetch(
+    const response = await previewFetch(
       `/api/services${editing?._id ? `/${editing._id}` : ""}`,
       {
         method: editing?._id ? "PATCH" : "POST",
@@ -63,7 +64,7 @@ export default function ServicesView() {
       return;
     }
     setError("");
-    const response = await fetch(`/api/services/${editing._id}`, {
+    const response = await previewFetch(`/api/services/${editing._id}`, {
       method: "DELETE",
     });
     if (response.ok) {
