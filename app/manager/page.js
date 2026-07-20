@@ -20,6 +20,7 @@ export default function ManagerPage() {
   const [manager, setManager] = useState(null);
   const [shops, setShops] = useState([]);
   const [reps, setReps] = useState([]);
+  const [agentTemplates, setAgentTemplates] = useState([]);
   const [state, setState] = useState("loading");
   const [activeView, setActiveView] = useState("shops");
   const [profileOpen, setProfileOpen] = useState(false);
@@ -31,12 +32,19 @@ export default function ManagerPage() {
   async function load() {
     setState("loading");
     try {
-      const [meResponse, shopsResponse, repsResponse] = await Promise.all([
+      const [meResponse, shopsResponse, repsResponse, templatesResponse] =
+        await Promise.all([
         previewFetch("/api/manager/me"),
         previewFetch("/api/manager/shops"),
         previewFetch("/api/manager/sales-people"),
+        previewFetch("/api/manager/agent-templates"),
       ]);
-      if (!meResponse.ok || !shopsResponse.ok || !repsResponse.ok) {
+      if (
+        !meResponse.ok ||
+        !shopsResponse.ok ||
+        !repsResponse.ok ||
+        !templatesResponse.ok
+      ) {
         throw new Error();
       }
       const me = await meResponse.json();
@@ -44,6 +52,7 @@ export default function ManagerPage() {
       setAdminPreview(Boolean(me.adminPreview));
       setShops((await shopsResponse.json()).shops || []);
       setReps(await repsResponse.json());
+      setAgentTemplates(await templatesResponse.json());
       setState("ready");
     } catch {
       setState("login");
@@ -282,6 +291,18 @@ export default function ManagerPage() {
             <span className="admin-kicker">Manager shop</span>
             <h2>{shopForm._id ? "Edit shop" : "Create shop"}</h2>
             <label>Shop name<input name="name" defaultValue={shopForm.name} required /></label>
+            {!shopForm._id && (
+              <label>Business type / agent template
+                <select name="agentTemplateId" required defaultValue="">
+                  <option value="" disabled>Select template</option>
+                  {agentTemplates.map((template) => (
+                    <option key={template._id} value={template._id}>
+                      {template.businessType} - {template.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <label>Assigned sales rep
               <select name="assignedSalesPersonId" defaultValue={assignedRepId(shopForm) || ""}>
                 <option value="">Unassigned</option>

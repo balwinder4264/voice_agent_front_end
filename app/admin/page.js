@@ -34,11 +34,13 @@ export default function AdminPage() {
   const [shops, setShops] = useState([]);
   const [agents, setAgents] = useState([]);
   const [salesPeople, setSalesPeople] = useState([]);
+  const [agentTemplates, setAgentTemplates] = useState([]);
   const [activeSection, setActiveSection] = useState("shops");
   const [selectedShopId, setSelectedShopId] = useState(null);
   const [agentForm, setAgentForm] = useState(null);
   const [shopForm, setShopForm] = useState(null);
   const [salesPersonForm, setSalesPersonForm] = useState(null);
+  const [agentTemplateForm, setAgentTemplateForm] = useState(null);
   const [loginError, setLoginError] = useState("");
   const [search, setSearch] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
@@ -51,10 +53,16 @@ export default function AdminPage() {
   });
 
   async function load(page = 1, query = search) {
-    const [shopResponse, agentResponse, salesPeopleResponse] = await Promise.all([
+    const [
+      shopResponse,
+      agentResponse,
+      salesPeopleResponse,
+      agentTemplatesResponse,
+    ] = await Promise.all([
       fetch(`/api/admin/shops?page=${page}&q=${encodeURIComponent(query)}`),
       fetch("/api/admin/agents"),
       fetch("/api/admin/sales-people"),
+      fetch("/api/admin/agent-templates"),
     ]);
     if (!shopResponse.ok) return setAuthenticated(false);
     const shopData = await shopResponse.json();
@@ -62,6 +70,7 @@ export default function AdminPage() {
     setPagination(shopData.pagination);
     setAgents(await agentResponse.json());
     setSalesPeople(await salesPeopleResponse.json());
+    setAgentTemplates(await agentTemplatesResponse.json());
     setAuthenticated(true);
   }
 
@@ -122,6 +131,76 @@ export default function AdminPage() {
     );
     if (response.ok) {
       setSalesPersonForm(null);
+      load(pagination.page, search);
+    }
+  }
+
+  async function saveAgentTemplate(event) {
+    event.preventDefault();
+    const body = Object.fromEntries(new FormData(event.currentTarget));
+    const editing = Boolean(agentTemplateForm?._id);
+    const response = await fetch(
+      `/api/admin/agent-templates${editing ? `/${agentTemplateForm._id}` : ""}`,
+      {
+        method: editing ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      },
+    );
+    if (response.ok) {
+      setAgentTemplateForm(null);
+      load(pagination.page, search);
+    }
+  }
+
+  async function deleteShop(shop) {
+    if (
+      !window.confirm(
+        `Delete "${shop.name}" and all of its users, agent, calls, appointments, services, staff, and settings?`,
+      )
+    ) {
+      return;
+    }
+    const response = await fetch(`/api/admin/shops/${shop._id}`, {
+      method: "DELETE",
+    });
+    if (response.ok) {
+      setSelectedShopId(null);
+      setShopForm(null);
+      load(1, search);
+    }
+  }
+
+  async function deleteSalesPerson(person) {
+    if (
+      !window.confirm(
+        `Delete "${person.name}"? Shops and reps linked to this person will be unassigned.`,
+      )
+    ) {
+      return;
+    }
+    const response = await fetch(`/api/admin/sales-people/${person._id}`, {
+      method: "DELETE",
+    });
+    if (response.ok) {
+      setSalesPersonForm(null);
+      load(pagination.page, search);
+    }
+  }
+
+  async function deleteAgentTemplate(template) {
+    if (
+      !window.confirm(
+        `Delete template "${template.name}"? Existing shop agents copied from it will not change.`,
+      )
+    ) {
+      return;
+    }
+    const response = await fetch(`/api/admin/agent-templates/${template._id}`, {
+      method: "DELETE",
+    });
+    if (response.ok) {
+      setAgentTemplateForm(null);
       load(pagination.page, search);
     }
   }
@@ -226,6 +305,17 @@ export default function AdminPage() {
           >
             <span>◈</span> Sales
             <small>{salesPeople.length}</small>
+          </button>
+          <button
+            className={`admin-nav-item ${activeSection === "templates" ? "active" : ""}`}
+            onClick={() => {
+              setActiveSection("templates");
+              setSelectedShopId(null);
+              setAgentForm(null);
+            }}
+          >
+            <span>▣</span> Templates
+            <small>{agentTemplates.length}</small>
           </button>
         </nav>
         <div className="sidebar-status">
@@ -335,6 +425,9 @@ export default function AdminPage() {
                   <button onClick={() => setShopForm(shop)}>
                     Edit
                   </button>
+                  <button className="danger-link" onClick={() => deleteShop(shop)}>
+                    Delete
+                  </button>
                 </div>
               </article>
             );
@@ -395,9 +488,17 @@ export default function AdminPage() {
               >
                 View shop portal
               </button>
-              <button className="admin-primary" onClick={() => setAgentForm({})}>
-                + Create agent
+              <button
+                className="danger-button"
+                onClick={() => deleteShop(selectedShop)}
+              >
+                Delete shop
               </button>
+              {!shopAgents.length && (
+                <button className="admin-primary" onClick={() => setAgentForm({})}>
+                  + Create agent
+                </button>
+              )}
             </div>
           </div>
 
@@ -407,7 +508,7 @@ export default function AdminPage() {
                 <span className={`agent-state ${agent.active ? "on" : "off"}`} />
                 <div>
                   <h3>{agent.name}</h3>
-                  <p>{agent.assignedPhoneNumber}</p>
+                  <p>{agent.assignedPhoneNumber || "No phone assigned"}</p>
                 </div>
                 <span className="agent-meta">
                   {agent.voice} · {agent.language}
@@ -416,7 +517,7 @@ export default function AdminPage() {
               </article>
             ))}
             {!shopAgents.length && (
-              <div className="admin-empty">No agents are assigned to this shop.</div>
+              <div className="admin-empty">No agent is assigned to this shop.</div>
             )}
           </div>
         </section>
@@ -458,11 +559,47 @@ export default function AdminPage() {
                   </span>
                   <button onClick={() => openSalesPreview(person._id)}>Portal</button>
                   <button onClick={() => setSalesPersonForm(person)}>Edit</button>
+                  <button className="danger-link" onClick={() => deleteSalesPerson(person)}>Delete</button>
                 </article>
               );
             })}
             {!salesPeople.length && (
               <div className="admin-empty">Add sales people before assigning shops.</div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {activeSection === "templates" && (
+        <section className="sales-team">
+          <header className="admin-header">
+            <div>
+              <span className="admin-kicker">Global setup</span>
+              <h1>Agent Templates</h1>
+              <p>{agentTemplates.length} global templates for new shops.</p>
+            </div>
+            <button className="admin-primary" onClick={() => setAgentTemplateForm({})}>
+              + Add template
+            </button>
+          </header>
+
+          <div className="sales-list">
+            {agentTemplates.map((template) => (
+              <article className="template-row" key={template._id}>
+                <span className={`agent-state ${template.active ? "on" : "off"}`} />
+                <div>
+                  <h3>{template.name}</h3>
+                  <p>{template.businessType} · {template.voice} · {template.language}</p>
+                </div>
+                <span className={`service-status ${template.active ? "active" : "inactive"}`}>
+                  {template.active ? "Active" : "Inactive"}
+                </span>
+                <button onClick={() => setAgentTemplateForm(template)}>Edit</button>
+                <button className="danger-link" onClick={() => deleteAgentTemplate(template)}>Delete</button>
+              </article>
+            ))}
+            {!agentTemplates.length && (
+              <div className="admin-empty">Create your first global agent template.</div>
             )}
           </div>
         </section>
@@ -479,6 +616,20 @@ export default function AdminPage() {
             <span className="admin-kicker">{shopForm._id ? "Shop settings" : "New business"}</span>
             <h2>{shopForm._id ? "Edit shop" : "Create shop"}</h2>
             <label>Shop name<input name="name" defaultValue={shopForm.name} required /></label>
+            {!shopForm._id && (
+              <label>Business type / agent template
+                <select name="agentTemplateId" required defaultValue="">
+                  <option value="" disabled>Select template</option>
+                  {agentTemplates
+                    .filter((template) => template.active)
+                    .map((template) => (
+                      <option key={template._id} value={template._id}>
+                        {template.businessType} - {template.name}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            )}
             <label>Assigned sales person
               <select
                 name="assignedSalesPersonId"
@@ -525,6 +676,47 @@ export default function AdminPage() {
             <button className="admin-primary">
               {shopForm._id ? "Save shop" : "Create shop and user"}
             </button>
+          </form>
+        </div>
+      )}
+
+      {agentTemplateForm && (
+        <div className="admin-overlay" onMouseDown={() => setAgentTemplateForm(null)}>
+          <form
+            className="admin-sheet"
+            key={agentTemplateForm._id || "new-template"}
+            onSubmit={saveAgentTemplate}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button type="button" className="sheet-close" onClick={() => setAgentTemplateForm(null)}>×</button>
+            <span className="admin-kicker">Global template</span>
+            <h2>{agentTemplateForm._id ? "Edit template" : "Add template"}</h2>
+            <div className="form-pair">
+              <label>Template name<input name="name" defaultValue={agentTemplateForm.name} required /></label>
+              <label>Business type<input name="businessType" defaultValue={agentTemplateForm.businessType} placeholder="Auto cleaning" required /></label>
+              <label>Voice<input name="voice" defaultValue={agentTemplateForm.voice || "marin"} required /></label>
+              <label>Language<input name="language" defaultValue={agentTemplateForm.language || "en"} required /></label>
+            </div>
+            <label>Opening greeting<textarea name="greeting" rows="3" defaultValue={agentTemplateForm.greeting} required /></label>
+            <label>Agent instructions<textarea name="instructions" rows="12" defaultValue={agentTemplateForm.instructions} required /></label>
+            <label>Status
+              <select name="active" defaultValue={String(agentTemplateForm.active ?? true)}>
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </select>
+            </label>
+            <button className="admin-primary">
+              {agentTemplateForm._id ? "Save template" : "Add template"}
+            </button>
+            {agentTemplateForm._id && (
+              <button
+                type="button"
+                className="danger-button"
+                onClick={() => deleteAgentTemplate(agentTemplateForm)}
+              >
+                Delete template
+              </button>
+            )}
           </form>
         </div>
       )}
@@ -578,6 +770,15 @@ export default function AdminPage() {
             <button className="admin-primary">
               {salesPersonForm._id ? "Save person" : "Add sales person"}
             </button>
+            {salesPersonForm._id && (
+              <button
+                type="button"
+                className="danger-button"
+                onClick={() => deleteSalesPerson(salesPersonForm)}
+              >
+                Delete person
+              </button>
+            )}
           </form>
         </div>
       )}
@@ -595,7 +796,7 @@ export default function AdminPage() {
             <h2>{agentForm._id ? "Edit agent" : "Create agent"}</h2>
             <div className="form-pair">
               <label>Agent name<input name="name" defaultValue={agentForm.name} required /></label>
-              <label>Phone number<input name="assignedPhoneNumber" defaultValue={agentForm.assignedPhoneNumber} placeholder="+14165551234" required /></label>
+              <label>Phone number<input name="assignedPhoneNumber" defaultValue={agentForm.assignedPhoneNumber} placeholder="+14165551234" /></label>
               <label>Voice<input name="voice" defaultValue={agentForm.voice || "marin"} required /></label>
               <label>Language<input name="language" defaultValue={agentForm.language || "en"} required /></label>
             </div>

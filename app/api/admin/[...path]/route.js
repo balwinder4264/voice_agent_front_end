@@ -11,7 +11,9 @@ async function forward(request, { params }) {
         "Content-Type": "application/json",
         cookie: (await cookies()).toString(),
       },
-      body: request.method === "GET" ? undefined : await request.text(),
+      body: ["GET", "DELETE"].includes(request.method)
+        ? undefined
+        : await request.text(),
       cache: "no-store",
     },
   );
@@ -24,3 +26,4 @@ async function forward(request, { params }) {
 export const GET = forward;
 export const POST = forward;
 export const PATCH = forward;
+export const DELETE = forward;

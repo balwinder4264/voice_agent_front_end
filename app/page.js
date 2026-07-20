@@ -273,7 +273,7 @@ export default function Home() {
           )}
           <div className="topbar-numbers">
             <span>Assigned</span>
-            {agents.length ? agents.map((agent) => (
+            {agents.filter((agent) => agent.assignedPhoneNumber).length ? agents.filter((agent) => agent.assignedPhoneNumber).map((agent) => (
               <a href={`tel:${agent.assignedPhoneNumber}`} key={agent._id}>
                 <span className={`agent-state ${agent.active ? "on" : "off"}`} />
                 {agent.assignedPhoneNumber}
