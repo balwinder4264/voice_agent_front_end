@@ -29,6 +29,19 @@ function salesManagerName(shop) {
   return typeof shop.salesManagerId === "object" ? shop.salesManagerId?.name : null;
 }
 
+function formatMoney(amountCents, currency) {
+  if (!amountCents || !currency) return "";
+  return new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency,
+  }).format(amountCents / 100);
+}
+
+function paymentEventLabel(event) {
+  const amount = formatMoney(event.amountCents, event.currency);
+  return amount ? `${event.message} · ${amount}` : event.message;
+}
+
 export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false);
   const [shops, setShops] = useState([]);
@@ -41,6 +54,7 @@ export default function AdminPage() {
   const [shopForm, setShopForm] = useState(null);
   const [salesPersonForm, setSalesPersonForm] = useState(null);
   const [agentTemplateForm, setAgentTemplateForm] = useState(null);
+  const [paymentLogsShop, setPaymentLogsShop] = useState(null);
   const [loginError, setLoginError] = useState("");
   const [search, setSearch] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
@@ -426,6 +440,9 @@ export default function AdminPage() {
                   <button onClick={() => openShopPreview(shop._id)}>
                     Portal
                   </button>
+                  <button onClick={() => setPaymentLogsShop(shop)}>
+                    Logs{shop.subscription?.events?.length ? ` (${shop.subscription.events.length})` : ""}
+                  </button>
                   <button onClick={() => setShopForm(shop)}>
                     Edit
                   </button>
@@ -485,6 +502,12 @@ export default function AdminPage() {
                 onClick={() => setShopForm(selectedShop)}
               >
                 Edit shop
+              </button>
+              <button
+                className="admin-secondary"
+                onClick={() => setPaymentLogsShop(selectedShop)}
+              >
+                Payment logs
               </button>
               <button
                 className="admin-secondary"
@@ -816,6 +839,46 @@ export default function AdminPage() {
               {agentForm._id ? "Save changes" : "Create agent"}
             </button>
           </form>
+        </div>
+      )}
+
+      {paymentLogsShop && (
+        <div className="admin-overlay" onMouseDown={() => setPaymentLogsShop(null)}>
+          <aside
+            className="admin-sheet compact billing-log-sheet"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button type="button" className="sheet-close" onClick={() => setPaymentLogsShop(null)}>×</button>
+            <span className="admin-kicker">{paymentLogsShop.name}</span>
+            <h2>Payment logs</h2>
+            <div className="billing-log-heading">
+              <span>Recent Stripe updates</span>
+              <small>{paymentLogsShop.subscription?.events?.length || 0} events</small>
+            </div>
+            <div className="billing-log-list">
+              {paymentLogsShop.subscription?.events?.length ? (
+                paymentLogsShop.subscription.events.map((event, index) => (
+                  <div className="billing-log-row" key={`${event.occurredAt}-${index}`}>
+                    <span className={`billing-log-dot ${event.type}`} />
+                    <div>
+                      <strong>{paymentEventLabel(event)}</strong>
+                      <time>
+                        {new Date(event.occurredAt).toLocaleString("en-CA", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                      </time>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>No payment activity yet.</p>
+              )}
+            </div>
+          </aside>
         </div>
       )}
     </main>

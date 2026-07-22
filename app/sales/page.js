@@ -12,6 +12,19 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+function formatMoney(amountCents, currency) {
+  if (!amountCents || !currency) return "";
+  return new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency,
+  }).format(amountCents / 100);
+}
+
+function paymentEventLabel(event) {
+  const amount = formatMoney(event.amountCents, event.currency);
+  return amount ? `${event.message} · ${amount}` : event.message;
+}
+
 export default function SalesPage() {
   const [salesUser, setSalesUser] = useState(null);
   const [shops, setShops] = useState([]);
@@ -22,6 +35,10 @@ export default function SalesPage() {
   const [adminPreview, setAdminPreview] = useState(false);
   const [agentForm, setAgentForm] = useState(null);
   const [shopFormOpen, setShopFormOpen] = useState(false);
+  const [paymentForm, setPaymentForm] = useState(null);
+  const [paymentResult, setPaymentResult] = useState(null);
+  const [paymentError, setPaymentError] = useState("");
+  const [paymentLogsShop, setPaymentLogsShop] = useState(null);
 
   async function loadPortal() {
     setState("loading");
@@ -103,6 +120,33 @@ export default function SalesPage() {
     if (response.ok) {
       setShopFormOpen(false);
       loadPortal();
+    }
+  }
+
+  function openPaymentLinkForm(shop) {
+    setPaymentError("");
+    setPaymentResult(null);
+    setPaymentForm({ shop });
+  }
+
+  async function createPaymentLink(event) {
+    event.preventDefault();
+    setPaymentError("");
+    setPaymentResult(null);
+    const response = await previewFetch(
+      `/api/sales/shops/${paymentForm.shop._id}/payment-links`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))),
+      },
+    );
+    const body = await response.json();
+    if (response.ok) {
+      setPaymentResult(body);
+      loadPortal();
+    } else {
+      setPaymentError(body.error || "Could not create payment link.");
     }
   }
 
@@ -212,11 +256,26 @@ export default function SalesPage() {
                 <span className={`agent-state ${shop.active ? "on" : "off"}`} />
                 <div>
                   <h2>{shop.name}</h2>
-                  <p>Assigned since {formatDate(shop.createdAt)}</p>
+                  <p>
+                    {shop.ownerEmail || "No owner email"} · Assigned since{" "}
+                    {formatDate(shop.createdAt)}
+                  </p>
                 </div>
+                <span className="subscription-status">
+                  {shop.subscription?.status === "payment_link_created"
+                    ? `Link ${formatMoney(
+                        shop.subscription.amountCents,
+                        shop.subscription.currency,
+                      )}`
+                    : shop.subscription?.status || "No subscription"}
+                </span>
                 <span className={`service-status ${shop.active ? "active" : "inactive"}`}>
                   {shop.active ? "Active" : "Inactive"}
                 </span>
+                <button onClick={() => setPaymentLogsShop(shop)}>
+                  Logs{shop.subscription?.events?.length ? ` (${shop.subscription.events.length})` : ""}
+                </button>
+                <button onClick={() => openPaymentLinkForm(shop)}>Payment</button>
                 <button onClick={() => openAgent(shop)}>Agent</button>
               </article>
             ))}
@@ -283,6 +342,111 @@ export default function SalesPage() {
             </label>
             <button className="admin-primary">Save agent</button>
           </form>
+        </div>
+      )}
+
+      {paymentForm && (
+        <div className="admin-overlay" onMouseDown={() => setPaymentForm(null)}>
+          <form
+            className="admin-sheet compact"
+            onSubmit={createPaymentLink}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button type="button" className="sheet-close" onClick={() => setPaymentForm(null)}>x</button>
+            <span className="admin-kicker">{paymentForm.shop.name}</span>
+            <h2>Create payment link</h2>
+            <label>Owner email
+              <input
+                name="email"
+                type="email"
+                defaultValue={paymentForm.shop.ownerEmail || ""}
+                required
+              />
+            </label>
+            <label>Monthly currency
+              <select name="currency" defaultValue={paymentForm.shop.subscription?.currency || "CAD"}>
+                <option value="CAD">CAD monthly</option>
+                <option value="USD">USD monthly</option>
+                <option value="INR">INR monthly</option>
+              </select>
+            </label>
+            <label>Monthly amount
+              <input
+                name="monthlyAmount"
+                type="number"
+                min="0.50"
+                step="0.01"
+                placeholder="49.99"
+                defaultValue={
+                  paymentForm.shop.subscription?.amountCents
+                    ? paymentForm.shop.subscription.amountCents / 100
+                    : ""
+                }
+                required
+              />
+            </label>
+            <button className="admin-primary">Generate link</button>
+            {paymentError && (
+              <p className="login-error" role="alert">{paymentError}</p>
+            )}
+            {paymentResult?.url && (
+              <div className="payment-link-result">
+                <span>Subscription link</span>
+                <strong>
+                  {formatMoney(paymentResult.amountCents, paymentResult.currency)} / month
+                </strong>
+                <a href={paymentResult.url} target="_blank" rel="noreferrer">
+                  {paymentResult.url}
+                </a>
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard?.writeText(paymentResult.url)}
+                >
+                  Copy link
+                </button>
+              </div>
+            )}
+          </form>
+        </div>
+      )}
+
+      {paymentLogsShop && (
+        <div className="admin-overlay" onMouseDown={() => setPaymentLogsShop(null)}>
+          <aside
+            className="admin-sheet compact billing-log-sheet"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button type="button" className="sheet-close" onClick={() => setPaymentLogsShop(null)}>x</button>
+            <span className="admin-kicker">{paymentLogsShop.name}</span>
+            <h2>Payment logs</h2>
+            <div className="billing-log-heading">
+              <span>Recent Stripe updates</span>
+              <small>{paymentLogsShop.subscription?.events?.length || 0} events</small>
+            </div>
+            <div className="billing-log-list">
+              {paymentLogsShop.subscription?.events?.length ? (
+                paymentLogsShop.subscription.events.map((event, index) => (
+                  <div className="billing-log-row" key={`${event.occurredAt}-${index}`}>
+                    <span className={`billing-log-dot ${event.type}`} />
+                    <div>
+                      <strong>{paymentEventLabel(event)}</strong>
+                      <time>
+                        {new Date(event.occurredAt).toLocaleString("en-CA", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                      </time>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>No payment activity yet.</p>
+              )}
+            </div>
+          </aside>
         </div>
       )}
     </div>

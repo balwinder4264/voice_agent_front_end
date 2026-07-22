@@ -16,6 +16,19 @@ function assignedRepId(shop) {
     : shop.assignedSalesPersonId;
 }
 
+function formatMoney(amountCents, currency) {
+  if (!amountCents || !currency) return "";
+  return new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency,
+  }).format(amountCents / 100);
+}
+
+function paymentEventLabel(event) {
+  const amount = formatMoney(event.amountCents, event.currency);
+  return amount ? `${event.message} · ${amount}` : event.message;
+}
+
 export default function ManagerPage() {
   const [manager, setManager] = useState(null);
   const [shops, setShops] = useState([]);
@@ -29,6 +42,7 @@ export default function ManagerPage() {
   const [repForm, setRepForm] = useState(null);
   const [adminPreview, setAdminPreview] = useState(false);
   const [agentForm, setAgentForm] = useState(null);
+  const [paymentLogsShop, setPaymentLogsShop] = useState(null);
 
   async function load() {
     setState("loading");
@@ -256,6 +270,9 @@ export default function ManagerPage() {
                     <span className={`service-status ${shop.active ? "active" : "inactive"}`}>
                       {shop.active ? "Active" : "Inactive"}
                     </span>
+                    <button onClick={() => setPaymentLogsShop(shop)}>
+                      Logs{shop.subscription?.events?.length ? ` (${shop.subscription.events.length})` : ""}
+                    </button>
                     <button onClick={() => openAgent(shop)}>Agent</button>
                     <button onClick={() => setShopForm(shop)}>Edit</button>
                   </article>
@@ -412,6 +429,46 @@ export default function ManagerPage() {
             </label>
             <button className="admin-primary">Save agent</button>
           </form>
+        </div>
+      )}
+
+      {paymentLogsShop && (
+        <div className="admin-overlay" onMouseDown={() => setPaymentLogsShop(null)}>
+          <aside
+            className="admin-sheet compact billing-log-sheet"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button type="button" className="sheet-close" onClick={() => setPaymentLogsShop(null)}>x</button>
+            <span className="admin-kicker">{paymentLogsShop.name}</span>
+            <h2>Payment logs</h2>
+            <div className="billing-log-heading">
+              <span>Recent Stripe updates</span>
+              <small>{paymentLogsShop.subscription?.events?.length || 0} events</small>
+            </div>
+            <div className="billing-log-list">
+              {paymentLogsShop.subscription?.events?.length ? (
+                paymentLogsShop.subscription.events.map((event, index) => (
+                  <div className="billing-log-row" key={`${event.occurredAt}-${index}`}>
+                    <span className={`billing-log-dot ${event.type}`} />
+                    <div>
+                      <strong>{paymentEventLabel(event)}</strong>
+                      <time>
+                        {new Date(event.occurredAt).toLocaleString("en-CA", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                      </time>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>No payment activity yet.</p>
+              )}
+            </div>
+          </aside>
         </div>
       )}
     </div>
