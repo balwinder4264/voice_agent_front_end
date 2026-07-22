@@ -204,8 +204,13 @@ header p { margin: 24px 0 0 6px; color: var(--muted); font-size: 17px; }
 .billing-status.paused, .billing-status.canceling { color: #7a4c00; background: #fff2c2; }
 .billing-status.past_due, .billing-status.unpaid, .billing-status.incomplete { color: #7a4c00; background: #fff2c2; }
 .billing-status.canceled { color: #9b2f20; background: #f8dfd8; }
-.billing-log-trigger { justify-self: start; margin-top: 4px; padding: 9px 12px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+.billing-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.billing-manage-trigger, .billing-log-trigger { justify-self: start; padding: 9px 12px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+.billing-manage-trigger { border-color: var(--green); color: white; background: var(--green); }
+.billing-manage-trigger:hover:not(:disabled) { background: var(--ink); border-color: var(--ink); }
+.billing-manage-trigger:disabled { cursor: wait; opacity: .72; }
 .billing-log-trigger:hover { border-color: var(--green); color: var(--green); }
+.billing-error { color: #9b2f20 !important; }
 .billing-log-sheet { gap: 16px; }
 .billing-log-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; }
 .billing-log-heading span { color: var(--green); font: 10px "DM Mono", monospace; text-transform: uppercase; }

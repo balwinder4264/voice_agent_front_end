@@ -34,6 +34,8 @@ export default function AnalyticsView() {
   const [data, setData] = useState(null);
   const [state, setState] = useState("loading");
   const [logsOpen, setLogsOpen] = useState(false);
+  const [billingState, setBillingState] = useState("idle");
+  const [billingError, setBillingError] = useState("");
 
   async function loadAnalytics() {
     setState("loading");
@@ -50,6 +52,25 @@ export default function AnalyticsView() {
   useEffect(() => {
     loadAnalytics();
   }, []);
+
+  async function manageSubscription() {
+    setBillingState("loading");
+    setBillingError("");
+    try {
+      const response = await previewFetch("/api/billing-portal", {
+        method: "POST",
+      });
+      const result = await response.json();
+      if (!response.ok || !result.url) {
+        throw new Error(result.error || "Could not open subscription management.");
+      }
+      window.open(result.url, "_blank", "noopener,noreferrer");
+      setBillingState("idle");
+    } catch (error) {
+      setBillingError(error.message);
+      setBillingState("error");
+    }
+  }
 
   if (state === "loading" && !data) {
     return <div className="analytics-loading">Calculating usage…</div>;
@@ -123,9 +144,21 @@ export default function AnalyticsView() {
                 })}
               </small>
             )}
-            <button className="billing-log-trigger" onClick={() => setLogsOpen(true)}>
-              Payment logs {paymentEvents.length ? `(${paymentEvents.length})` : ""}
-            </button>
+            <div className="billing-actions">
+              {data.subscription?.canManageSubscription && (
+                <button
+                  className="billing-manage-trigger"
+                  onClick={manageSubscription}
+                  disabled={billingState === "loading"}
+                >
+                  {billingState === "loading" ? "Opening..." : "Manage subscription"}
+                </button>
+              )}
+              <button className="billing-log-trigger" onClick={() => setLogsOpen(true)}>
+                Payment logs {paymentEvents.length ? `(${paymentEvents.length})` : ""}
+              </button>
+            </div>
+            {billingError && <small className="billing-error">{billingError}</small>}
           </div>
         </article>
         {cards.map(([label, metric], index) => (

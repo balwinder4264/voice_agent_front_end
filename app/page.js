@@ -23,6 +23,21 @@ function formatDuration(seconds = 0) {
   return `${minutes}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
+const shopViews = new Set([
+  "calendar",
+  "calls",
+  "services",
+  "staff",
+  "analytics",
+  "business",
+]);
+
+function initialShopView() {
+  if (typeof window === "undefined") return "calendar";
+  const view = new URLSearchParams(window.location.search).get("view");
+  return shopViews.has(view) ? view : "calendar";
+}
+
 export default function Home() {
   const [calls, setCalls] = useState([]);
   const [agents, setAgents] = useState([]);
@@ -30,7 +45,7 @@ export default function Home() {
   const [state, setState] = useState("loading");
   const [loginError, setLoginError] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
-  const [activeView, setActiveView] = useState("calendar");
+  const [activeView, setActiveView] = useState(initialShopView);
   const [shopUser, setShopUser] = useState(null);
   const [adminPreview, setAdminPreview] = useState(false);
   const [previewRecordingUrl, setPreviewRecordingUrl] = useState("");
