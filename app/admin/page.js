@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Files, Store, UsersRound } from "lucide-react";
 import reserveSyncLogo from "../reservesync-dark.svg";
+import { PortalShell } from "../components/portal/PortalShell";
 
 function agentShopId(agent) {
   return typeof agent.shopId === "object" ? agent.shopId?._id : agent.shopId;
@@ -295,75 +297,56 @@ export default function AdminPage() {
     (template) => template.active,
   );
   const editingShop = Boolean(shopForm?._id);
+  const navItems = [
+    {
+      key: "shops",
+      label: "Shops",
+      icon: Store,
+      count: pagination.total,
+      active: activeSection === "shops",
+      onClick: () => {
+        setActiveSection("shops");
+        setSelectedShopId(null);
+      },
+    },
+    {
+      key: "sales",
+      label: "Sales",
+      icon: UsersRound,
+      count: salesPeople.length,
+      active: activeSection === "sales",
+      onClick: () => {
+        setActiveSection("sales");
+        setSelectedShopId(null);
+        setAgentForm(null);
+      },
+    },
+    {
+      key: "templates",
+      label: "Templates",
+      icon: Files,
+      count: agentTemplates.length,
+      active: activeSection === "templates",
+      onClick: () => {
+        setActiveSection("templates");
+        setSelectedShopId(null);
+        setAgentForm(null);
+      },
+    },
+  ];
 
   return (
-    <div className="admin-shell">
-      <aside className="admin-sidebar">
-        <div className="shop-brand">
-          <img className="brand-logo" src={reserveSyncLogo.src} alt="ReserveSync" />
-        </div>
-        <nav>
-          <button
-            className={`admin-nav-item ${activeSection === "shops" ? "active" : ""}`}
-            onClick={() => {
-              setActiveSection("shops");
-              setSelectedShopId(null);
-            }}
-          >
-            <span>◆</span> Shops
-            <small>{pagination.total}</small>
-          </button>
-          <button
-            className={`admin-nav-item ${activeSection === "sales" ? "active" : ""}`}
-            onClick={() => {
-              setActiveSection("sales");
-              setSelectedShopId(null);
-              setAgentForm(null);
-            }}
-          >
-            <span>◈</span> Sales
-            <small>{salesPeople.length}</small>
-          </button>
-          <button
-            className={`admin-nav-item ${activeSection === "templates" ? "active" : ""}`}
-            onClick={() => {
-              setActiveSection("templates");
-              setSelectedShopId(null);
-              setAgentForm(null);
-            }}
-          >
-            <span>▣</span> Templates
-            <small>{agentTemplates.length}</small>
-          </button>
-        </nav>
-        <div className="sidebar-status">
-          <span className="live-dot" />
-          Admin console
-        </div>
-      </aside>
-
-      <div className="admin-workspace">
-        <div className="admin-topbar">
-          <span>Administration</span>
-          <div className="profile-menu">
-            <button
-              className="profile-trigger"
-              onClick={() => setProfileOpen(!profileOpen)}
-              aria-expanded={profileOpen}
-              aria-label="Open account menu"
-            >
-              <span className="person-glyph" />
-            </button>
-            {profileOpen && (
-              <div className="profile-dropdown">
-                <span>Administrator</span>
-                <button onClick={logout}>Logout</button>
-              </div>
-            )}
-          </div>
-        </div>
-
-    <main className="admin">
+    <PortalShell
+      logoSrc={reserveSyncLogo.src}
+      navItems={navItems}
+      statusTitle="Admin console"
+      topbarLabel="Administration"
+      profileLabel="Administrator"
+      profileOpen={profileOpen}
+      onProfileToggle={() => setProfileOpen(!profileOpen)}
+      onLogout={logout}
+      mainClassName="admin"
+    >
       {activeSection === "shops" && (
         <>
         <header className="admin-header">
@@ -881,8 +864,6 @@ export default function AdminPage() {
           </aside>
         </div>
       )}
-    </main>
-      </div>
-    </div>
+    </PortalShell>
   );
 }

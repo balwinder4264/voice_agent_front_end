@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Store, UsersRound } from "lucide-react";
 import reserveSyncLogo from "../reservesync-dark.svg";
 import { clearPreviewSession, getPreviewTarget, previewFetch } from "../previewSession";
+import { PortalShell, PreviewBanner } from "../components/portal/PortalShell";
 
 function assignedRepName(shop) {
   return typeof shop.assignedSalesPersonId === "object"
@@ -175,73 +177,49 @@ export default function ManagerPage() {
     );
   }
 
+  const navItems = [
+    {
+      key: "shops",
+      label: "Shops",
+      icon: Store,
+      count: shops.length,
+      active: activeView === "shops",
+      onClick: () => setActiveView("shops"),
+    },
+    {
+      key: "reps",
+      label: "Team",
+      icon: UsersRound,
+      count: reps.length,
+      active: activeView === "reps",
+      onClick: () => setActiveView("reps"),
+    },
+  ];
+
+  const topbarLeft = adminPreview ? (
+    <PreviewBanner
+      onExit={() => {
+        clearPreviewSession();
+        window.close();
+        window.location.href = "/admin";
+      }}
+    />
+  ) : null;
+
   return (
-    <div className="manager-shell">
-      <aside className="sales-sidebar">
-        <div className="shop-brand">
-          <img className="brand-logo" src={reserveSyncLogo.src} alt="ReserveSync" />
-        </div>
-        <nav>
-          <button
-            className={`shop-nav-item ${activeView === "shops" ? "active" : ""}`}
-            onClick={() => setActiveView("shops")}
-          >
-            <span>◆</span> Shops
-            <small>{shops.length}</small>
-          </button>
-          <button
-            className={`shop-nav-item ${activeView === "reps" ? "active" : ""}`}
-            onClick={() => setActiveView("reps")}
-          >
-            <span>◈</span> Team
-            <small>{reps.length}</small>
-          </button>
-        </nav>
-        <div className="sidebar-status">
-          <span className="live-dot" />
-          <span>
-            <strong>Manager online</strong>
-            {manager?.email && <small>{manager.email}</small>}
-          </span>
-        </div>
-      </aside>
-
-      <div className="sales-workspace">
-        <div className="shop-topbar">
-          {adminPreview && (
-            <div className="preview-banner">
-              <span>Admin preview</span>
-              <button
-                onClick={() => {
-                  clearPreviewSession();
-                  window.close();
-                  window.location.href = "/admin";
-                }}
-              >
-                Exit preview
-              </button>
-            </div>
-          )}
-          <span className="sales-topbar-label">Manager Portal</span>
-          <div className="profile-menu">
-            <button
-              className="profile-trigger"
-              onClick={() => setProfileOpen(!profileOpen)}
-              aria-expanded={profileOpen}
-              aria-label="Open account menu"
-            >
-              <span className="person-glyph" />
-            </button>
-            {profileOpen && (
-              <div className="profile-dropdown">
-                <span>{manager?.email || "Manager account"}</span>
-                <button onClick={logout}>Logout</button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <main className="sales-main">
+    <PortalShell
+      logoSrc={reserveSyncLogo.src}
+      navItems={navItems}
+      statusTitle="Manager online"
+      statusDetail={manager?.email}
+      topbarLeft={topbarLeft}
+      topbarLabel="Manager Portal"
+      profileLabel={manager?.email || "Manager account"}
+      profileOpen={profileOpen}
+      onProfileToggle={() => setProfileOpen(!profileOpen)}
+      onLogout={logout}
+      mainClassName="sales-main"
+    >
           {activeView === "shops" ? (
             <section>
               <header className="sales-page-header">
@@ -319,8 +297,7 @@ export default function ManagerPage() {
               </div>
             </section>
           )}
-        </main>
-      </div>
+      
 
       {shopForm && (
         <div className="admin-overlay" onMouseDown={() => setShopForm(null)}>
@@ -471,6 +448,6 @@ export default function ManagerPage() {
           </aside>
         </div>
       )}
-    </div>
+    </PortalShell>
   );
 }

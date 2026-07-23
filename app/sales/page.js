@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Store } from "lucide-react";
 import reserveSyncLogo from "../reservesync-dark.svg";
 import { clearPreviewSession, getPreviewTarget, previewFetch } from "../previewSession";
+import { PortalShell, PreviewBanner } from "../components/portal/PortalShell";
 
 function formatDate(value) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -173,63 +175,41 @@ export default function SalesPage() {
     );
   }
 
+  const navItems = [
+    {
+      key: "assigned-shops",
+      label: "Assigned Shops",
+      icon: Store,
+      count: shops.length,
+      active: true,
+      onClick: () => {},
+    },
+  ];
+
+  const topbarLeft = adminPreview ? (
+    <PreviewBanner
+      onExit={() => {
+        clearPreviewSession();
+        window.close();
+        window.location.href = "/admin";
+      }}
+    />
+  ) : null;
+
   return (
-    <div className="sales-shell">
-      <aside className="sales-sidebar">
-        <div className="shop-brand">
-          <img className="brand-logo" src={reserveSyncLogo.src} alt="ReserveSync" />
-        </div>
-        <nav>
-          <button className="shop-nav-item active">
-            <span>▦</span> Assigned Shops
-            <small>{shops.length}</small>
-          </button>
-        </nav>
-        <div className="sidebar-status">
-          <span className="live-dot" />
-          <span>
-            <strong>Sales online</strong>
-            {salesUser?.email && <small>{salesUser.email}</small>}
-          </span>
-        </div>
-      </aside>
-
-      <div className="sales-workspace">
-        <div className="shop-topbar">
-          {adminPreview && (
-            <div className="preview-banner">
-              <span>Admin preview</span>
-              <button
-                onClick={() => {
-                  clearPreviewSession();
-                  window.close();
-                  window.location.href = "/admin";
-                }}
-              >
-                Exit preview
-              </button>
-            </div>
-          )}
-          <span className="sales-topbar-label">Sales Portal</span>
-          <div className="profile-menu">
-            <button
-              className="profile-trigger"
-              onClick={() => setProfileOpen(!profileOpen)}
-              aria-expanded={profileOpen}
-              aria-label="Open account menu"
-            >
-              <span className="person-glyph" />
-            </button>
-            {profileOpen && (
-              <div className="profile-dropdown">
-                <span>{salesUser?.email || "Sales account"}</span>
-                <button onClick={logout}>Logout</button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <main className="sales-main">
+    <PortalShell
+      logoSrc={reserveSyncLogo.src}
+      navItems={navItems}
+      statusTitle="Sales online"
+      statusDetail={salesUser?.email}
+      topbarLeft={topbarLeft}
+      topbarLabel="Sales Portal"
+      profileLabel={salesUser?.email || "Sales account"}
+      profileOpen={profileOpen}
+      onProfileToggle={() => setProfileOpen(!profileOpen)}
+      onLogout={logout}
+      mainClassName="sales-main"
+    >
           <header className="sales-page-header">
             <div>
               <span className="admin-kicker">My accounts</span>
@@ -283,8 +263,7 @@ export default function SalesPage() {
               <div className="admin-empty">No shops are assigned to you yet.</div>
             )}
           </section>
-        </main>
-      </div>
+      
 
       {shopFormOpen && (
         <div className="admin-overlay" onMouseDown={() => setShopFormOpen(false)}>
@@ -449,6 +428,6 @@ export default function SalesPage() {
           </aside>
         </div>
       )}
-    </div>
+    </PortalShell>
   );
 }

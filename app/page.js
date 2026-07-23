@@ -1,11 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  BarChart3,
+  BriefcaseBusiness,
+  CalendarDays,
+  ListChecks,
+  PhoneCall,
+  UsersRound,
+} from "lucide-react";
 import CalendarView from "./components/CalendarView";
 import ServicesView from "./components/ServicesView";
 import BusinessSettingsView from "./components/BusinessSettingsView";
 import AnalyticsView from "./components/AnalyticsView";
 import StaffView from "./components/StaffView";
+import { PortalShell, PreviewBanner } from "./components/portal/PortalShell";
 import reserveSyncLogo from "./reservesync-dark.svg";
 import { clearPreviewSession, getPreviewTarget, previewFetch } from "./previewSession";
 
@@ -216,104 +225,88 @@ export default function Home() {
     );
   }
 
+  const navItems = [
+    {
+      key: "calendar",
+      label: "Calendar",
+      icon: CalendarDays,
+      active: activeView === "calendar",
+      onClick: () => setActiveView("calendar"),
+    },
+    {
+      key: "calls",
+      label: "Calls",
+      icon: PhoneCall,
+      count: pagination.total,
+      active: activeView === "calls",
+      onClick: () => setActiveView("calls"),
+    },
+    {
+      key: "services",
+      label: "Services",
+      icon: ListChecks,
+      active: activeView === "services",
+      onClick: () => setActiveView("services"),
+    },
+    {
+      key: "staff",
+      label: "Staff",
+      icon: UsersRound,
+      active: activeView === "staff",
+      onClick: () => setActiveView("staff"),
+    },
+    {
+      key: "analytics",
+      label: "Analytics",
+      icon: BarChart3,
+      active: activeView === "analytics",
+      onClick: () => setActiveView("analytics"),
+    },
+    {
+      key: "business",
+      label: "Business",
+      icon: BriefcaseBusiness,
+      active: activeView === "business",
+      onClick: () => setActiveView("business"),
+    },
+  ];
+
+  const topbarLeft = (
+    <>
+      {adminPreview && (
+        <PreviewBanner
+          onExit={() => {
+            clearPreviewSession();
+            window.close();
+            window.location.href = "/admin";
+          }}
+        />
+      )}
+      <div className="topbar-numbers">
+        <span>Assigned</span>
+        {agents.filter((agent) => agent.assignedPhoneNumber).length ? agents.filter((agent) => agent.assignedPhoneNumber).map((agent) => (
+          <a href={`tel:${agent.assignedPhoneNumber}`} key={agent._id}>
+            <span className={`agent-state ${agent.active ? "on" : "off"}`} />
+            {agent.assignedPhoneNumber}
+          </a>
+        )) : <small>No number assigned</small>}
+      </div>
+    </>
+  );
+
   return (
-    <div className="shop-shell">
-      <aside className="shop-sidebar">
-        <div className="shop-brand">
-          <img className="brand-logo" src={reserveSyncLogo.src} alt="ReserveSync" />
-        </div>
-        <nav>
-          <button
-            className={`shop-nav-item ${activeView === "calendar" ? "active" : ""}`}
-            onClick={() => setActiveView("calendar")}
-          >
-            <span>▦</span> Calendar
-          </button>
-          <button
-            className={`shop-nav-item ${activeView === "calls" ? "active" : ""}`}
-            onClick={() => setActiveView("calls")}
-          >
-            <span>◉</span> Calls
-            <small>{pagination.total}</small>
-          </button>
-          <button
-            className={`shop-nav-item ${activeView === "services" ? "active" : ""}`}
-            onClick={() => setActiveView("services")}
-          >
-            <span>≡</span> Services
-          </button>
-          <button
-            className={`shop-nav-item ${activeView === "staff" ? "active" : ""}`}
-            onClick={() => setActiveView("staff")}
-          >
-            <span>◎</span> Staff
-          </button>
-          <button
-            className={`shop-nav-item ${activeView === "analytics" ? "active" : ""}`}
-            onClick={() => setActiveView("analytics")}
-          >
-            <span>↗</span> Analytics
-          </button>
-          <button
-            className={`shop-nav-item ${activeView === "business" ? "active" : ""}`}
-            onClick={() => setActiveView("business")}
-          >
-            <span>⌂</span> Business
-          </button>
-        </nav>
-        <div className="sidebar-status">
-          <span className="live-dot" />
-          <span>
-            <strong>System online</strong>
-            {shopUser?.email && <small>{shopUser.email}</small>}
-          </span>
-        </div>
-      </aside>
-
-      <div className="shop-workspace">
-        <div className="shop-topbar">
-          {adminPreview && (
-            <div className="preview-banner">
-              <span>Admin preview</span>
-              <button
-                onClick={() => {
-                  clearPreviewSession();
-                  window.close();
-                  window.location.href = "/admin";
-                }}
-              >
-                Exit preview
-              </button>
-            </div>
-          )}
-          <div className="topbar-numbers">
-            <span>Assigned</span>
-            {agents.filter((agent) => agent.assignedPhoneNumber).length ? agents.filter((agent) => agent.assignedPhoneNumber).map((agent) => (
-              <a href={`tel:${agent.assignedPhoneNumber}`} key={agent._id}>
-                <span className={`agent-state ${agent.active ? "on" : "off"}`} />
-                {agent.assignedPhoneNumber}
-              </a>
-            )) : <small>No number assigned</small>}
-          </div>
-          <div className="profile-menu">
-            <button
-              className="profile-trigger"
-              onClick={() => setProfileOpen(!profileOpen)}
-              aria-expanded={profileOpen}
-              aria-label="Open account menu"
-            >
-              <span className="person-glyph" />
-            </button>
-            {profileOpen && (
-              <div className="profile-dropdown">
-                <span>{shopUser?.email || "Shop account"}</span>
-                <button onClick={logout}>Logout</button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <main className="shop-main">
+    <PortalShell
+      logoSrc={reserveSyncLogo.src}
+      navItems={navItems}
+      statusTitle="System online"
+      statusDetail={shopUser?.email}
+      topbarLeft={topbarLeft}
+      profileLabel={shopUser?.email || "Shop account"}
+      profileOpen={profileOpen}
+      onProfileToggle={() => setProfileOpen(!profileOpen)}
+      onLogout={logout}
+      mainClassName="shop-main"
+    >
       {activeView === "calls" ? (
         <>
       <header className="shop-page-header">
@@ -434,8 +427,7 @@ export default function Home() {
       ) : (
         <BusinessSettingsView />
       )}
-        </main>
-      </div>
+      
 
       {selectedCall && (
         <div
@@ -514,6 +506,6 @@ export default function Home() {
           </section>
         </div>
       )}
-    </div>
+    </PortalShell>
   );
 }
