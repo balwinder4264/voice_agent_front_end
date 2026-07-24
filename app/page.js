@@ -22,7 +22,11 @@ import AnalyticsView from "./components/AnalyticsView";
 import StaffView from "./components/StaffView";
 import { PortalShell, PreviewBanner } from "./components/portal/PortalShell";
 import reserveSyncLogo from "./reservesync-dark.svg";
-import { clearPreviewSession, getPreviewTarget, previewFetch } from "./previewSession";
+import {
+  clearPreviewSession,
+  getPreviewTarget,
+  previewFetch,
+} from "./previewSession";
 
 function formatDate(value) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -222,7 +226,10 @@ export default function Home() {
             <img src={reserveSyncLogo.src} alt="ReserveSync" />
           </div>
           <div className="auth-hero-copy">
-            <span className="eyebrow"><span className="live-dot" />Reservation operations</span>
+            <span className="eyebrow">
+              <span className="live-dot" />
+              Reservation operations
+            </span>
             <h1>Keep every booking, call, and calendar in sync.</h1>
             <p>
               ReserveSync gives teams one clear workspace for appointments,
@@ -251,7 +258,9 @@ export default function Home() {
         <section className="auth-form-panel" aria-label="Sign in">
           <form className="shop-login" onSubmit={login}>
             <div className="auth-form-header">
-              <span className="auth-secure"><ShieldCheck size={15} /> Secure sign in</span>
+              <span className="auth-secure">
+                <ShieldCheck size={15} /> Secure sign in
+              </span>
               <h2>Welcome back</h2>
               <p>Sign in to continue to ReserveSync.</p>
             </div>
@@ -260,7 +269,12 @@ export default function Home() {
               <span>Email address</span>
               <span className="auth-input-wrap">
                 <Mail size={17} />
-                <input name="email" type="email" placeholder="you@company.com" required />
+                <input
+                  name="email"
+                  type="email"
+                  placeholder="you@company.com"
+                  required
+                />
               </span>
             </label>
 
@@ -287,12 +301,14 @@ export default function Home() {
 
             <div className="auth-row">
               <span>Protected account portal</span>
-              <a href="mailto:support@reservesync.com">Need help?</a>
+              <a href="mailto:ops@reservesync.com">Need help?</a>
             </div>
 
             <button className="auth-submit">Sign in</button>
             {loginError && (
-              <p className="login-error" role="alert">{loginError}</p>
+              <p className="login-error" role="alert">
+                {loginError}
+              </p>
             )}
           </form>
           <small className="auth-footer">© 2026 ReserveSync</small>
@@ -360,12 +376,20 @@ export default function Home() {
       )}
       <div className="topbar-numbers">
         <span>Assigned</span>
-        {agents.filter((agent) => agent.assignedPhoneNumber).length ? agents.filter((agent) => agent.assignedPhoneNumber).map((agent) => (
-          <a href={`tel:${agent.assignedPhoneNumber}`} key={agent._id}>
-            <span className={`agent-state ${agent.active ? "on" : "off"}`} />
-            {agent.assignedPhoneNumber}
-          </a>
-        )) : <small>No number assigned</small>}
+        {agents.filter((agent) => agent.assignedPhoneNumber).length ? (
+          agents
+            .filter((agent) => agent.assignedPhoneNumber)
+            .map((agent) => (
+              <a href={`tel:${agent.assignedPhoneNumber}`} key={agent._id}>
+                <span
+                  className={`agent-state ${agent.active ? "on" : "off"}`}
+                />
+                {agent.assignedPhoneNumber}
+              </a>
+            ))
+        ) : (
+          <small>No number assigned</small>
+        )}
       </div>
     </>
   );
@@ -385,112 +409,112 @@ export default function Home() {
     >
       {activeView === "calls" ? (
         <>
-      <header className="shop-page-header">
-        <div>
-          <span className="admin-kicker">Call history</span>
-          <h1>Calls</h1>
-        </div>
-        <button
-          className="refresh"
-          onClick={() => loadCalls(pagination.page, search)}
-          disabled={state === "loading"}
-        >
-          {state === "loading" ? "Loading…" : "Refresh"}
-        </button>
-      </header>
+          <header className="shop-page-header">
+            <div>
+              <span className="admin-kicker">Call history</span>
+              <h1>Calls</h1>
+            </div>
+            <button
+              className="refresh"
+              onClick={() => loadCalls(pagination.page, search)}
+              disabled={state === "loading"}
+            >
+              {state === "loading" ? "Loading…" : "Refresh"}
+            </button>
+          </header>
 
-      <section className="call-panel">
-        <div className="panel-heading">
-          <span>Recent calls</span>
-          <span>{pagination.total} total</span>
-        </div>
+          <section className="call-panel">
+            <div className="panel-heading">
+              <span>Recent calls</span>
+              <span>{pagination.total} total</span>
+            </div>
 
-        {state !== "error" && (
-          <form className="call-search" onSubmit={searchCalls}>
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search caller phone number"
-              aria-label="Search calls by phone number"
-            />
-            <button>Search</button>
-            {search && (
-              <button
-                type="button"
-                className="search-clear"
-                onClick={() => {
-                  setSearch("");
-                  loadCalls(1, "");
-                }}
-              >
-                Clear
-              </button>
+            {state !== "error" && (
+              <form className="call-search" onSubmit={searchCalls}>
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search caller phone number"
+                  aria-label="Search calls by phone number"
+                />
+                <button>Search</button>
+                {search && (
+                  <button
+                    type="button"
+                    className="search-clear"
+                    onClick={() => {
+                      setSearch("");
+                      loadCalls(1, "");
+                    }}
+                  >
+                    Clear
+                  </button>
+                )}
+              </form>
             )}
-          </form>
-        )}
 
-        {state === "ready" && calls.length === 0 && (
-          <div className="empty">
-            <strong>{search ? "No matching calls" : "No calls yet"}</strong>
-            <span>
-              {search
-                ? "Try another caller phone number."
-                : "Completed voice-agent calls will appear here."}
-            </span>
-          </div>
-        )}
+            {state === "ready" && calls.length === 0 && (
+              <div className="empty">
+                <strong>{search ? "No matching calls" : "No calls yet"}</strong>
+                <span>
+                  {search
+                    ? "Try another caller phone number."
+                    : "Completed voice-agent calls will appear here."}
+                </span>
+              </div>
+            )}
 
-        {calls.map((call, index) => (
-          <article
-            className="call"
-            key={call.id}
-            style={{ "--delay": `${index * 45}ms` }}
-          >
-            <button
-              className="call-summary"
-              onClick={() => setSelectedCall(call)}
-              aria-label={`Open call from ${call.callerNumber || "unknown caller"}`}
-            >
-              <span className="avatar">
-                {(call.callerNumber || "?").slice(-2)}
-              </span>
-              <span className="call-who">
-                <strong>{call.callerNumber || "Unknown caller"}</strong>
-                <small>to {call.calledNumber || "voice agent"}</small>
-              </span>
-              <span className="call-time">
-                <strong>{formatDate(call.startedAt)}</strong>
-                <small>{formatDuration(call.durationSeconds)}</small>
-              </span>
-              <span className={`status ${call.status}`}>
-                {call.status.replace("_", " ")}
-              </span>
-              <span className="chevron">↗</span>
-            </button>
-          </article>
-        ))}
+            {calls.map((call, index) => (
+              <article
+                className="call"
+                key={call.id}
+                style={{ "--delay": `${index * 45}ms` }}
+              >
+                <button
+                  className="call-summary"
+                  onClick={() => setSelectedCall(call)}
+                  aria-label={`Open call from ${call.callerNumber || "unknown caller"}`}
+                >
+                  <span className="avatar">
+                    {(call.callerNumber || "?").slice(-2)}
+                  </span>
+                  <span className="call-who">
+                    <strong>{call.callerNumber || "Unknown caller"}</strong>
+                    <small>to {call.calledNumber || "voice agent"}</small>
+                  </span>
+                  <span className="call-time">
+                    <strong>{formatDate(call.startedAt)}</strong>
+                    <small>{formatDuration(call.durationSeconds)}</small>
+                  </span>
+                  <span className={`status ${call.status}`}>
+                    {call.status.replace("_", " ")}
+                  </span>
+                  <span className="chevron">↗</span>
+                </button>
+              </article>
+            ))}
 
-        {state === "ready" && pagination.totalPages > 1 && (
-          <nav className="pagination" aria-label="Call history pages">
-            <button
-              disabled={!pagination.hasPrevious}
-              onClick={() => loadCalls(pagination.page - 1, search)}
-            >
-              ← Previous
-            </button>
-            <span>
-              Page {pagination.page} of {pagination.totalPages}
-            </span>
-            <button
-              disabled={!pagination.hasNext}
-              onClick={() => loadCalls(pagination.page + 1, search)}
-            >
-              Next →
-            </button>
-          </nav>
-        )}
-      </section>
+            {state === "ready" && pagination.totalPages > 1 && (
+              <nav className="pagination" aria-label="Call history pages">
+                <button
+                  disabled={!pagination.hasPrevious}
+                  onClick={() => loadCalls(pagination.page - 1, search)}
+                >
+                  ← Previous
+                </button>
+                <span>
+                  Page {pagination.page} of {pagination.totalPages}
+                </span>
+                <button
+                  disabled={!pagination.hasNext}
+                  onClick={() => loadCalls(pagination.page + 1, search)}
+                >
+                  Next →
+                </button>
+              </nav>
+            )}
+          </section>
         </>
       ) : activeView === "calendar" ? (
         <CalendarView agents={agents} />
@@ -503,7 +527,6 @@ export default function Home() {
       ) : (
         <BusinessSettingsView />
       )}
-      
 
       {selectedCall && (
         <div
