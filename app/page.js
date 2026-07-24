@@ -5,8 +5,14 @@ import {
   BarChart3,
   BriefcaseBusiness,
   CalendarDays,
+  CalendarCheck2,
+  Eye,
+  EyeOff,
   ListChecks,
+  LockKeyhole,
+  Mail,
   PhoneCall,
+  ShieldCheck,
   UsersRound,
 } from "lucide-react";
 import CalendarView from "./components/CalendarView";
@@ -53,6 +59,7 @@ export default function Home() {
   const [selectedCall, setSelectedCall] = useState(null);
   const [state, setState] = useState("loading");
   const [loginError, setLoginError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [activeView, setActiveView] = useState(initialShopView);
   const [shopUser, setShopUser] = useState(null);
@@ -210,17 +217,86 @@ export default function Home() {
   if (state === "error") {
     return (
       <main className="shop-auth">
-        <form className="shop-login" onSubmit={login}>
-          <span className="eyebrow"><span className="live-dot" />Voice agent portal</span>
-          <h1>Welcome back</h1>
-          <p>Sign in to review your calls and recordings.</p>
-          <input name="email" type="email" placeholder="Email" required />
-          <input name="password" type="password" placeholder="Password" required />
-          <button>Sign in</button>
-          {loginError && (
-            <p className="login-error" role="alert">{loginError}</p>
-          )}
-        </form>
+        <section className="auth-brand-panel" aria-label="ReserveSync overview">
+          <div className="auth-logo-lockup">
+            <img src={reserveSyncLogo.src} alt="ReserveSync" />
+          </div>
+          <div className="auth-hero-copy">
+            <span className="eyebrow"><span className="live-dot" />Reservation operations</span>
+            <h1>Keep every booking, call, and calendar in sync.</h1>
+            <p>
+              ReserveSync gives teams one clear workspace for appointments,
+              staff availability, call history, and business settings.
+            </p>
+          </div>
+          <div className="auth-signal-grid" aria-hidden="true">
+            <div>
+              <CalendarCheck2 size={18} />
+              <strong>Live schedule</strong>
+              <span>Today synced</span>
+            </div>
+            <div>
+              <PhoneCall size={18} />
+              <strong>Voice desk</strong>
+              <span>Calls captured</span>
+            </div>
+            <div>
+              <ShieldCheck size={18} />
+              <strong>Secure access</strong>
+              <span>Protected portal</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="auth-form-panel" aria-label="Sign in">
+          <form className="shop-login" onSubmit={login}>
+            <div className="auth-form-header">
+              <span className="auth-secure"><ShieldCheck size={15} /> Secure sign in</span>
+              <h2>Welcome back</h2>
+              <p>Sign in to continue to ReserveSync.</p>
+            </div>
+
+            <label className="auth-field">
+              <span>Email address</span>
+              <span className="auth-input-wrap">
+                <Mail size={17} />
+                <input name="email" type="email" placeholder="you@company.com" required />
+              </span>
+            </label>
+
+            <label className="auth-field">
+              <span>Password</span>
+              <span className="auth-input-wrap">
+                <LockKeyhole size={17} />
+                <input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
+              </span>
+            </label>
+
+            <div className="auth-row">
+              <span>Protected account portal</span>
+              <a href="mailto:support@reservesync.com">Need help?</a>
+            </div>
+
+            <button className="auth-submit">Sign in</button>
+            {loginError && (
+              <p className="login-error" role="alert">{loginError}</p>
+            )}
+          </form>
+          <small className="auth-footer">© 2026 ReserveSync</small>
+        </section>
       </main>
     );
   }

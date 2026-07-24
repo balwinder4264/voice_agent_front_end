@@ -1,8 +1,8 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Call Desk",
-  description: "Voice agent call recordings and transcripts",
+  title: "ReserveSync",
+  description: "Reservation management, calls, and scheduling in one workspace",
 };
 
 export default function RootLayout({ children }) {
